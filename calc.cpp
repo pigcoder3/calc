@@ -16,7 +16,7 @@ std::string calculate(std::string equation) {
 	bool anythingToCalculate = false;
 	bool parenthesis = false;
 	bool absoluteValue = false;
-	bool exponents = false; 
+	bool exponentsOrRoots = false; 
 	bool multiplyOrDivide = false;
 	bool addOrSubtract = false;
 	bool inParenthesis = false;
@@ -32,7 +32,7 @@ std::string calculate(std::string equation) {
 		if(scoutingPhase) { //Reset everything to scout again
 			parenthesis = false;
 			absoluteValue = false;
-			exponents = false;
+			exponentsOrRoots = false;
 			multiplyOrDivide = false;
 			addOrSubtract = false;
 			inParenthesis = false;
@@ -62,7 +62,6 @@ std::string calculate(std::string equation) {
 			} else if(equation[i] == '|') { //When closing absolute value in calculation phase, use recursion to calculate what is inside.
 					
 				if(!scoutingPhase) {
-					//std::cout << "INSIDE" << inAbsoluteValue << std::endl;
 					if(inAbsoluteValue) { //The end of the absolute value block
 						equation = equation.substr(0, calculationStartIndex) + //Beginning
 							removeZeros(std::to_string(fabs(stod(calculate(equation.substr(calculationStartIndex+1, i-1-calculationStartIndex)))))) + //Maths
@@ -77,20 +76,26 @@ std::string calculate(std::string equation) {
 				} else {
 					absoluteValue = true;
 				}
-			} else if(equation[i] == '^') { //Dealing with exponents
+			} else if(equation[i] == '^' || equation[i] == 'V') { //Dealing with exponents and roots
 				if(inParenthesis || inAbsoluteValue) {continue; }
 				if((parenthesis && !inParenthesis)) { inCalculation = false;continue;} //Dont use this as part of the equation if there is something higher in PEMDAS
 				if(!scoutingPhase && !parenthesis) { //Make sure the other parts of PEMDAS that come first do not exist
-					//std::cout << "Exponent: " << equation.substr(calculationStartIndex, i) << endl;
-					long double newNumber = pow(stod(equation.substr(calculationStartIndex, i)), getNumber(equation, i+1));
-					equation = recreateEquation(equation, i, calculationStartIndex, newNumber);
+					if(equation[i] == '^') {
+						//std::cout << "Exponent: " << equation.substr(calculationStartIndex, i) << endl;
+						long double newNumber = pow(stod(equation.substr(calculationStartIndex, i)), getNumber(equation, i+1));
+						equation = recreateEquation(equation, i, calculationStartIndex, newNumber);
+					} else if(equation[i] == 'V') {
+						//std::cout << "Root: " << equation.substr(calculationStartIndex, i) << endl;
+						long double newNumber = pow(getNumber(equation, i+1), 1.0/stod(equation.substr(calculationStartIndex, i))); //4^(1/2) = sqrt(4)	
+						equation = recreateEquation(equation, i, calculationStartIndex, newNumber);
+					}
 				} else {
-					exponents = true;
+					exponentsOrRoots = true;
 				}
 			} else if(equation[i] == '*' || equation[i] == '/') { //Make sure the other parts of PEMDAS that come first do not exist
 				if(inParenthesis || inAbsoluteValue) {continue; }
-				if(((parenthesis && !inParenthesis) || exponents)) { inCalculation = false;continue;} //Dont use this as part of the equation if there is something higher in PEMDAS
-				if(!scoutingPhase && !parenthesis && !exponents) {
+				if(((parenthesis && !inParenthesis) || exponentsOrRoots)) { inCalculation = false;continue;} //Dont use this as part of the equation if there is something higher in PEMDAS
+				if(!scoutingPhase && !parenthesis && !exponentsOrRoots) {
 					if(equation[i] == '*') { //Multiply
 						//std::cout << "Multiply: " << equation.substr(calculationStartIndex, i) << endl;
 						long double newNumber = stod(equation.substr(calculationStartIndex, i)) * getNumber(equation, i+1);
@@ -108,8 +113,8 @@ std::string calculate(std::string equation) {
 				//Special case: The minus sign and the negative sign are the same char. The program checks for a digit to the left. If there is a digit, then this is a minus sign, otherwise it is a negative sign.
 
 				if(inParenthesis || inAbsoluteValue) { continue; }
-				if(((parenthesis && !inParenthesis) || exponents || multiplyOrDivide)) { inCalculation = false; continue;} //Dont use this as part of the equation if there is something higher in PEMDAS
-				if(!scoutingPhase && !parenthesis && !exponents && !multiplyOrDivide) { //Make sure the other parts of PEMDAS that come first do not exist
+				if(((parenthesis && !inParenthesis) || exponentsOrRoots || multiplyOrDivide)) { inCalculation = false; continue;} //Dont use this as part of the equation if there is something higher in PEMDAS
+				if(!scoutingPhase && !parenthesis && !exponentsOrRoots && !multiplyOrDivide) { //Make sure the other parts of PEMDAS that come first do not exist
 					if(equation[i] == '+') { //Add
 						//std::cout << "Add: " << equation.substr(calculationStartIndex, i) << std::endl;
 						long double newNumber = stod(equation.substr(calculationStartIndex, i)) + getNumber(equation, i+1);
@@ -129,7 +134,7 @@ std::string calculate(std::string equation) {
 		calculationStartIndex = 0;
 		scoutingPhase = !scoutingPhase; //Every other loop will be a scouting phase that checks for specific things (PEMDAS)	
 		//Make sure that there is nothing left to calculate
-		if(!scoutingPhase && !parenthesis && !absoluteValue && !exponents && !multiplyOrDivide && !addOrSubtract) { return equation; } //Note the "!scoutingPhase", we just left it
+		if(!scoutingPhase && !parenthesis && !absoluteValue && !exponentsOrRoots && !multiplyOrDivide && !addOrSubtract) { return equation; } //Note the "!scoutingPhase", we just left it
 	}
 }
 
@@ -183,7 +188,7 @@ int main(int argc, char **argv) {
 
 	//If the incorrect number of arguments were given, give the usage
 	if(argc != 2) { 
-		std::cout << "Usage: calc equation";
+		std::cout << "Usage: calc equation\n";
 		return 0;
 	}
 
@@ -194,8 +199,12 @@ int main(int argc, char **argv) {
 			"       calc -h\n"
 			"\n"
 			"Notes:\n"
-			"	If you want to use spaces, put quotation marks around your equation.\n"
-			"	Calc follows rules of order of operations.\n"
+			"  [1] Quotation marks should be present to make sure that your shells interprets the equation as a single argument.\n"
+			"  [2] Calc follows rules of order of operations.\n"
+			"  [3] If certain symbols are not placed in their proper positions (or not placed at all), the parser will have incorrect responses (without an error because none will be detected).\n"
+			"    Ex: 4*5(3+2) will output 200. This is because the program will place the output of the stuff within the parenthesis back in the equation (So it will read 4*55).\n"
+			"      To make this work, do 4*5*(3+2) to get the intended result.\n"
+			"\n"
 			"Specific Syntax: (Just throw these together like is done with real equations)\n"
 			"  Add: +\n"
 			"  Subtract: -\n"
@@ -203,12 +212,11 @@ int main(int argc, char **argv) {
 			"  Multiply: *\n"
 			"  Parenthesis: ( )\n"
 			"  Absolute Value: | |\n"
-			"  Power: (number^power) Note that the parenthesis should be present.\n"
-			"  Root: (rootVnumber) Note that the parenthesis should be present.\n"
-			"  Distribution: number(number +/-/*// number)\n"
+			"  Power: number^power\n"
+			"  Root: ((root)V(number)) Note that the parenthesis should be present to ensure that the parser reads it the correct way. Inner parenthesis are not necessary if there is only 1 number within.\n"
 			"\n"
 			"Examples:\n"
-			"  4*5(3+2) 	= 100\n"
+			"  4*5*(3+2) 	= 100 [See note 3]\n"
 			"  (-4^2)+2/3 	= 16.6666666\n"
 			"  |-5-2| 	= 7\n"
 			"  2/(3V8) 	= 1\n";
