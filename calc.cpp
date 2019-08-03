@@ -1,6 +1,7 @@
 #include <cstring>
 #include <iostream>
 #include <algorithm>
+#include <cmath>
 
 using namespace std;
 
@@ -25,6 +26,8 @@ std::string calculate(std::string equation) {
 	bool inCalculation = 0;	
 	while(true) {
 
+		//cout << equation << endl;
+
 		if(scoutingPhase) { //Reset everything to scout again
 			parenthesis = false;
 			exponents = false;
@@ -37,25 +40,23 @@ std::string calculate(std::string equation) {
 		}
 
 		for(int i=0; i<equation.length(); i++) {
-	
-			if(!inCalculation && isdigit(equation[i])) {
+
+			if(!inCalculation && !inParenthesis && isdigit(equation[i])) {
 				calculationStartIndex = i;
 				inCalculation = true;
 			}
 
 			if(equation[i] == '(') { //Getting the open parenthesis
+				calculationStartIndex = i;
 				inParenthesis = true;
 				parenthesis = true;
-				calculationStartIndex = i;
-			} else if(!scoutingPhase && equation[i] == ')') { //When closing parenthesis in calculation phase, use recursion to calculate what is inside
-				equation = equation.substr(0, i+1) + calculate(equation.substr(calculationStartIndex, i-calculationStartIndex)) + equation.substr(i+1, equation.length());
+				inCalculation = true;
+			} else if(!scoutingPhase && equation[i] == ')' && inParenthesis) { //When closing parenthesis in calculation phase, use recursion to calculate what is inside
+				equation = equation.substr(0, calculationStartIndex) + //Beginning
+					calculate(equation.substr(calculationStartIndex+1, i-calculationStartIndex-1)) + //Maths
+					equation.substr(i+1, equation.length()); //End
+				inParenthesis = false;
 				break;
-			} else if(equation[i] == '^') { //Dealing with exponents
-				//Need to find way to get the number after the symbol
-				if(!scoutingPhase) { //Make sure the other parts of PEMDAS that come first do not exist
-					equation = equation.substr(0, calculationStartIndex) + calculate(equation.substr(calculationStartIndex, i-calculationStartIndex)) + equation.substr(i+1, equation.length());
-					break;
-				}
 			} else if(equation[i] == '|') { //When closing absolute value in calculation phase, use recursion to calculate what is inside.
 				if(!scoutingPhase) {
 						
@@ -68,13 +69,24 @@ std::string calculate(std::string equation) {
 					}
 					inAbsoluteValue = !inAbsoluteValue;
 				}
+			} else if(equation[i] == '^') { //Dealing with exponents
+				if((parenthesis && !inParenthesis)) { inCalculation = false; continue;} //Dont use this as part of the equation if there is something higher in PEMDAS
+				if(!scoutingPhase && !parenthesis) { //Make sure the other parts of PEMDAS that come first do not exist
+					//cout << "Exponent: " << equation.substr(calculationStartIndex, i) << endl;
+					long double newNumber = pow(stod(equation.substr(calculationStartIndex, i)), getNumber(equation, i+1));
+					equation = recreateEquation(equation, i, calculationStartIndex, newNumber);
+				} else {
+					exponents = true;
+				}
 			} else if(equation[i] == '*' || equation[i] == '/') { //Make sure the other parts of PEMDAS that come first do not exist
-				if((parenthesis && !inParenthesis) || exponents) { inCalculation = false; } //Dont use this as part of the equation if there is something higher in PEMDAS
-				if(!scoutingPhase && (!parenthesis || inParenthesis) && !exponents) {
+				if(((parenthesis && !inParenthesis) || exponents)) { inCalculation = false; continue;} //Dont use this as part of the equation if there is something higher in PEMDAS
+				if(!scoutingPhase && !parenthesis && !exponents) {
 					if(equation[i] == '*') { //Multiply
+						//cout << "Multiply: " << equation.substr(calculationStartIndex, i) << endl;
 						long double newNumber = stod(equation.substr(calculationStartIndex, i)) * getNumber(equation, i+1);
 						equation = recreateEquation(equation, i, calculationStartIndex, newNumber);
 					} else { //Divide
+						//cout << "Divide: " << equation.substr(calculationStartIndex, i) << endl;
 						long double newNumber = stod(equation.substr(calculationStartIndex, i)) / getNumber(equation, i+1);
 						equation = recreateEquation(equation, i, calculationStartIndex, newNumber);
 					}
@@ -83,12 +95,14 @@ std::string calculate(std::string equation) {
 					multiplyOrDivide = true;
 				}
 			} else if(equation[i] == '+' || equation[i] == '-') {
-				if((parenthesis && !inParenthesis) || exponents || multiplyOrDivide) { inCalculation = false; } //Dont use this as part of the equation if there is something higher in PEMDAS
-				if(!scoutingPhase && (!parenthesis || inParenthesis) && !exponents && !multiplyOrDivide) { //Make sure the other parts of PEMDAS that come first do not exist
+				if(((parenthesis && !inParenthesis) || exponents || multiplyOrDivide)) { inCalculation = false; continue;} //Dont use this as part of the equation if there is something higher in PEMDAS
+				if(!scoutingPhase && !parenthesis && !exponents && !multiplyOrDivide) { //Make sure the other parts of PEMDAS that come first do not exist
 					if(equation[i] == '+') { //Add
+						//cout << "Add: " << equation.substr(calculationStartIndex, i) << endl;
 						long double newNumber = stod(equation.substr(calculationStartIndex, i)) + getNumber(equation, i+1);
 						equation = recreateEquation(equation, i, calculationStartIndex, newNumber);
 					} else { //Subtract
+						//cout << "Subtract: " << equation.substr(calculationStartIndex, i) << endl;
 						long double newNumber = stod(equation.substr(calculationStartIndex, i)) - getNumber(equation, i+1);
 						equation = recreateEquation(equation, i, calculationStartIndex, newNumber);
 					}
@@ -100,7 +114,7 @@ std::string calculate(std::string equation) {
 			}
 		}
 		calculationStartIndex = 0;
-		scoutingPhase = !scoutingPhase; //Every other loop while be a scouting phase that checks for specific things (PEMDAS)	
+		scoutingPhase = !scoutingPhase; //Every other loop will be a scouting phase that checks for specific things (PEMDAS)	
 		//Make sure that there is nothing left to calculate
 		if(!scoutingPhase && !parenthesis && !exponents && !multiplyOrDivide && !addOrSubtract) { return equation; } //Note the "!scoutingPhase", we just left it
 	}
@@ -192,5 +206,4 @@ int main(int argc, char **argv) {
 		//Begin recursive calculations
 		cout << calculate(str) << endl;
 	}
-
-
+}
