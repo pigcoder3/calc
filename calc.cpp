@@ -82,12 +82,22 @@ std::string calculate(std::string equation) {
 				if(!scoutingPhase && !parenthesis) { //Make sure the other parts of PEMDAS that come first do not exist
 					if(equation[i] == '^') {
 						//std::cout << "Exponent: " << equation.substr(calculationStartIndex, i) << endl;
-						long double newNumber = pow(stod(equation.substr(calculationStartIndex, i)), getNumber(equation, i+1));
-						equation = recreateEquation(equation, i, calculationStartIndex, newNumber);
+						try {
+							long double newNumber = pow(stod(equation.substr(calculationStartIndex, i)), getNumber(equation, i+1));
+							equation = recreateEquation(equation, i, calculationStartIndex, newNumber);
+						} catch(std::invalid_argument) {
+							std::cout << "Error: invalid syntax. (When using exponents)" << std::endl;
+							exit(-1);
+						}
 					} else if(equation[i] == 'V') {
 						//std::cout << "Root: " << equation.substr(calculationStartIndex, i) << endl;
-						long double newNumber = pow(getNumber(equation, i+1), 1.0/stod(equation.substr(calculationStartIndex, i))); //4^(1/2) = sqrt(4)	
-						equation = recreateEquation(equation, i, calculationStartIndex, newNumber);
+						try {
+							long double newNumber = pow(getNumber(equation, i+1), 1.0/stod(equation.substr(calculationStartIndex, i))); //4^(1/2) = sqrt(4)	
+							equation = recreateEquation(equation, i, calculationStartIndex, newNumber);
+						} catch(std::invalid_argument) {
+							std::cout << "Error: invalid syntax. (When using roots)" << std::endl;
+							exit(-1);
+						}
 					}
 				} else {
 					exponentsOrRoots = true;
@@ -98,12 +108,22 @@ std::string calculate(std::string equation) {
 				if(!scoutingPhase && !parenthesis && !exponentsOrRoots) {
 					if(equation[i] == '*') { //Multiply
 						//std::cout << "Multiply: " << equation.substr(calculationStartIndex, i) << endl;
-						long double newNumber = stod(equation.substr(calculationStartIndex, i)) * getNumber(equation, i+1);
-						equation = recreateEquation(equation, i, calculationStartIndex, newNumber);
+						try {
+							long double newNumber = stod(equation.substr(calculationStartIndex, i)) * getNumber(equation, i+1);
+							equation = recreateEquation(equation, i, calculationStartIndex, newNumber);
+						} catch(std::invalid_argument) {
+							std::cout << "Error: invalid syntax. (During multiplication)" << std::endl;
+							exit(-1);
+						}
 					} else { //Divide
 						//std::cout << "Divide: " << equation.substr(calculationStartIndex, i) << endl;
-						long double newNumber = stod(equation.substr(calculationStartIndex, i)) / getNumber(equation, i+1);
-						equation = recreateEquation(equation, i, calculationStartIndex, newNumber);
+						try {
+							long double newNumber = stod(equation.substr(calculationStartIndex, i)) / getNumber(equation, i+1);
+							equation = recreateEquation(equation, i, calculationStartIndex, newNumber);
+						} catch(std::invalid_argument) {
+							std::cout << "Error: invalid syntax. (During division)" << std::endl;
+							exit(-1);
+						}
 					}
 					break;
 				} else {
@@ -117,12 +137,22 @@ std::string calculate(std::string equation) {
 				if(!scoutingPhase && !parenthesis && !exponentsOrRoots && !multiplyOrDivide) { //Make sure the other parts of PEMDAS that come first do not exist
 					if(equation[i] == '+') { //Add
 						//std::cout << "Add: " << equation.substr(calculationStartIndex, i) << std::endl;
-						long double newNumber = stod(equation.substr(calculationStartIndex, i)) + getNumber(equation, i+1);
-						equation = recreateEquation(equation, i, calculationStartIndex, newNumber);
+						try {
+							long double newNumber = stod(equation.substr(calculationStartIndex, i)) + getNumber(equation, i+1);
+							equation = recreateEquation(equation, i, calculationStartIndex, newNumber);
+						} catch(std::invalid_argument) {
+							std::cout << "Error: invalid syntax. (During addition)" << std::endl;
+							exit(-1);
+						}
 					} else { //Subtract
 						//std::cout << "Subtract: " << equation.substr(calculationStartIndex, i) << std::endl;
-						long double newNumber = stod(equation.substr(calculationStartIndex, i)) - getNumber(equation, i+1);
-						equation = recreateEquation(equation, i, calculationStartIndex, newNumber);
+						try {
+							long double newNumber = stod(equation.substr(calculationStartIndex, i)) - getNumber(equation, i+1);
+							equation = recreateEquation(equation, i, calculationStartIndex, newNumber);
+						} catch(std::invalid_argument) {
+							std::cout << "Error: invalid syntax. ((During subtraction)" << std::endl;
+							exit(-1);
+						}
 					}
 
 					break;
@@ -163,7 +193,12 @@ long double getNumber(std::string input, int index) {
 	}
 
 	//Convert the string to long double and return it
-	return stod(number);
+	try {
+		return stod(number);
+	} catch (std::invalid_argument) {
+		std::cout << "Error: Invalid syntax. (Unkown origin)" << std::endl;
+		exit(-1);
+	}
 }
 
 //Removes all trailing zeros
