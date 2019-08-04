@@ -9,7 +9,8 @@ int depth = 0;
 
 void printStep(std::string step);
 std::string recreateEquation(std::string equation, int index, int calculationStartIndex, long double newNumber);
-long double getNumber(std::string input, int index);
+long double getNumberAsNumber(std::string input, int index);
+std::string getNumberAsString(std::string input, int index);
 std::string removeZeros(std::string input);
 
 std::string calculate(std::string equation) {
@@ -87,7 +88,7 @@ std::string calculate(std::string equation) {
 					if(equation[i] == '^') {
 						//std::cout << "Exponent: " << equation.substr(calculationStartIndex, i) << endl;
 						try {
-							long double secondNumber = getNumber(equation, i+1);
+							long double secondNumber = getNumberAsNumber(equation, i+1);
 							long double newNumber = pow(stod(equation.substr(calculationStartIndex, i)), secondNumber);
 							if(showSteps && !scoutingPhase) { printStep("Exponent: " + equation.substr(calculationStartIndex, i+1) + removeZeros(std::to_string(secondNumber))); }
 							equation = recreateEquation(equation, i, calculationStartIndex, newNumber);
@@ -102,7 +103,7 @@ std::string calculate(std::string equation) {
 					} else if(equation[i] == 'V') {
 						//std::cout << "Root: " << equation.substr(calculationStartIndex, i) << endl;
 						try {
-							long double secondNumber = getNumber(equation, i+1);
+							long double secondNumber = getNumberAsNumber(equation, i+1);
 							long double newNumber = pow(secondNumber, 1.0/stod(equation.substr(calculationStartIndex, i))); //4^(1/2) = sqrt(4)	
 							if(showSteps && !scoutingPhase) { printStep("Root: " + equation.substr(calculationStartIndex, i+1) + removeZeros(std::to_string(secondNumber))); }
 							equation = recreateEquation(equation, i, calculationStartIndex, newNumber);
@@ -125,7 +126,7 @@ std::string calculate(std::string equation) {
 				if(!scoutingPhase && !parenthesis && !exponentsOrRoots) {
 					if(equation[i] == '*') { //Multiply
 						try {
-							long double secondNumber = getNumber(equation, i+1);
+							long double secondNumber = getNumberAsNumber(equation, i+1);
 							long double newNumber = stod(equation.substr(calculationStartIndex, i)) * secondNumber;
 							if(showSteps && !scoutingPhase) { printStep("Multiply: " + equation.substr(calculationStartIndex, i+1) + removeZeros(std::to_string(secondNumber))); }
 							equation = recreateEquation(equation, i, calculationStartIndex, newNumber);
@@ -138,7 +139,7 @@ std::string calculate(std::string equation) {
 						}
 					} else { //Divide
 						try {
-							long double secondNumber = getNumber(equation, i+1);
+							long double secondNumber = getNumberAsNumber(equation, i+1);
 							long double newNumber = stod(equation.substr(calculationStartIndex, i)) / secondNumber;
 							if(showSteps && !scoutingPhase) { printStep("Divide: " + equation.substr(calculationStartIndex, i+1) + removeZeros(std::to_string(secondNumber))); }
 							equation = recreateEquation(equation, i, calculationStartIndex, newNumber);
@@ -163,7 +164,7 @@ std::string calculate(std::string equation) {
 				if(!scoutingPhase && !parenthesis && !exponentsOrRoots && !multiplyOrDivide) { //Make sure the other parts of PEMDAS that come first do not exist
 					if(equation[i] == '+') { //Add
 						try {
-							long double secondNumber = getNumber(equation, i+1);
+							long double secondNumber = getNumberAsNumber(equation, i+1);
 							long double newNumber = stod(equation.substr(calculationStartIndex, i)) + secondNumber;
 							if(showSteps && !scoutingPhase) { printStep("Add: " + equation.substr(calculationStartIndex, i+1) + removeZeros(std::to_string(secondNumber))); }
 							equation = recreateEquation(equation, i, calculationStartIndex, newNumber);
@@ -176,7 +177,7 @@ std::string calculate(std::string equation) {
 						}
 					} else { //Subtract
 						try {
-							long double secondNumber = getNumber(equation, i+1);
+							long double secondNumber = getNumberAsNumber(equation, i+1);
 							long double newNumber = stod(equation.substr(calculationStartIndex, i)) - secondNumber;
 							if(showSteps && !scoutingPhase) { printStep("Subtract: " + equation.substr(calculationStartIndex, i+1) + removeZeros(std::to_string(secondNumber))); }
 							equation = recreateEquation(equation, i, calculationStartIndex, newNumber);
@@ -212,16 +213,16 @@ void printStep(std::string step) {
 
 //recreates the equation with the new calculated number
 std::string recreateEquation(std::string equation, int i, int calculationStartIndex, long double newNumber) {
-	long double otherNumber = getNumber(equation, i+1); //Gets the second number
+	std::string otherNumber = getNumberAsString(equation, i+1); //Gets the second number
 	equation = equation.substr(0, calculationStartIndex) + //Adds the beginning
 	removeZeros(std::to_string(newNumber)) + //Adds the new number
-	equation.substr(i+1 + removeZeros(std::to_string(otherNumber)).length(),
-		equation.length()-1 - i+1 + removeZeros(std::to_string(otherNumber)).length()); //Adds the stuff after
+	equation.substr(i+1 + otherNumber.length(),
+		equation.length()-1 - i+1 + otherNumber.length()); //Adds the stuff after
 	return equation;
 }
 
 //Used to get numbers from the equation
-long double getNumber(std::string input, int index) {
+long double getNumberAsNumber(std::string input, int index) {
 	std::string number;
 
 	//Add each digit/decimal point to the new string
@@ -247,6 +248,26 @@ long double getNumber(std::string input, int index) {
 		std::cout << "Error: Number too large. (Unknown origin)" << std::endl;
 		exit(-1);
 	}
+
+}
+
+std::string getNumberAsString(std::string input, int index) {
+	std::string number;
+
+	//Add each digit/decimal point to the new string
+	for(int i=index; i<input.length(); i++) {
+		if((isdigit(input[i]) || (input[i] == '-' && number.length() == 0)) || (input[i] == '.')) { //The negative sign would be at the front of the number so we are ok
+			number+=input[i];
+		} else {
+			//The number has ended
+			break;
+		}
+	}
+
+	//std::cout << number.length() << std::endl;
+	//std::cout << number << std::endl;
+
+	return number;
 
 }
 
@@ -346,7 +367,7 @@ int main(int argc, char **argv) {
 		char c = str[i];
 		if(c == '(') {
 			char c2 = str[i+1];
-			if(c2 == '+' || (c == '-' && !isdigit(str[i+1])) || c2 == '*' || c2 == '/' || c2 == '^' || c2 == 'V') { //extra symbol
+			if(c2 == '+' || (c2 == '-' && (!isdigit(str[i+2]) && !(str[i+2] == '.' && isdigit(str[i+3])))) || c2 == '*' || c2 == '/' || c2 == '^' || c2 == 'V') { //extra symbol
 				std::cout << "Syntax error(char: " << i+1 << ") (No preceeding number): " << c << c2 << std::endl; //No preceeding number
 				error = true;
 			}
