@@ -115,6 +115,7 @@ std::string calculate(std::string equation) {
 						}
 
 					}
+					break;
 				} else {
 					exponentsOrRoots = true;
 				}
@@ -173,7 +174,6 @@ std::string calculate(std::string equation) {
 							std::cout << "Error: Number too large. (During addition)" << std::endl;
 							exit(-1);
 						}
-
 					} else { //Subtract
 						try {
 							long double secondNumber = getNumber(equation, i+1);
@@ -187,7 +187,6 @@ std::string calculate(std::string equation) {
 							std::cout << "Error: Number too large. (During subtraction)" << std::endl;
 							exit(-1);
 						}
-
 					}
 
 					break;
@@ -227,13 +226,16 @@ long double getNumber(std::string input, int index) {
 
 	//Add each digit/decimal point to the new string
 	for(int i=index; i<input.length(); i++) {
-		if((isdigit(input[i]) || input[i] == '-') || (input[i] == '.')) { //The negative sign would be at the front of the number so we are ok
+		if((isdigit(input[i]) || (input[i] == '-' && number.length() == 0)) || (input[i] == '.')) { //The negative sign would be at the front of the number so we are ok
 			number+=input[i];
 		} else {
 			//The number has ended
 			break;
 		}
 	}
+
+	//std::cout << number.length() << std::endl;
+	//std::cout << number << std::endl;
 
 	//Convert the string to long double and return it
 	try {
@@ -258,6 +260,20 @@ std::string removeZeros(std::string input) {
 			break;
 		} else if(input[i] == '0') {
 			input.pop_back();
+		} else {
+			break;
+		}
+	}
+
+	//Remove leading zeros
+	for(int i=0; i<input.length(); i++) {
+		if(input[i] == '.') {
+			break;
+		} else if(input[i] == '-') {
+			//We dont want to remove the negative sign so do nothing
+		} else if(input[i] == '0') {
+			input.erase(0, 1);
+			i--;
 		} else {
 			break;
 		}
@@ -324,6 +340,7 @@ int main(int argc, char **argv) {
 
 	//Check for syntax errors
 	bool inAbsoluteValue = false;
+	bool inParenthesis = false;
 	bool error = false;
 	for(int i=0; i<str.length(); i++) {
 		char c = str[i];
@@ -333,6 +350,13 @@ int main(int argc, char **argv) {
 				std::cout << "Syntax error(char: " << i+1 << ") (No preceeding number): " << c << c2 << std::endl; //No preceeding number
 				error = true;
 			}
+			inParenthesis = true;
+		} else if(c == ')') {
+			if(!inParenthesis) {
+				std::cout << "Syntax error(char: " << i+1 << ") (Extra parenthesis): " << c << std::endl;
+				error = true;
+			}
+			inParenthesis = false;
 		} else if(c == '|') {	
 			char c2 = str[i+1];
 			if(inAbsoluteValue) {
@@ -342,7 +366,7 @@ int main(int argc, char **argv) {
 				}
 			}
 			inAbsoluteValue = !inAbsoluteValue;
-		} else if(c == '+' || (c == '-' && !isdigit(str[i+1])) || c == '*' || c == '/' || c == '^' || c == 'V') {
+		} else if(c == '+' || (c == '-' && (!isdigit(str[i+1]) && !(str[i+1] == '.' && isdigit(str[i+2])))) || c == '*' || c == '/' || c == '^' || c == 'V') {
 			if(i == 0) { 
 				std::cout << "Syntax error(char: " << i+1 << ") (No preceeding number): " << c << std::endl; //No preceeding number
 				error = true;
@@ -354,7 +378,7 @@ int main(int argc, char **argv) {
 			if(c2 == ')' || (c2 == '|' && inAbsoluteValue)) { //Extra symbol before section end
 				std::cout << "Syntax error(char: " << i+1 << ") (No following number): " << c << c2 << std::endl; //Not following number
 				error = true;
-			} else if(c2 == '+' || (c2 == '-' && !isdigit(str[i+2])) || c2 == '*' || c2 == '/' || c2 == '^' || c2 == 'V') { //Double symbols
+			} else if(c2 == '+' || (c2 == '-' && (!isdigit(str[i+2]) && !(str[i+2] == '.' && isdigit(str[i+3])))) || c2 == '*' || c2 == '/' || c2 == '^' || c2 == 'V') { //Double symbols
 				std::cout << "Syntax error(char: " << i+1 << ") (double symbols): " << c << c2 << std::endl; //double symbols
 				error = true;
 			}
@@ -375,6 +399,14 @@ int main(int argc, char **argv) {
 			std::cout << "Syntax error(char: " << i+1 << ") (unknown symbol): " << c << std::endl; //Unknown symbol
 			error = true;
 		}
+	}
+
+	if(inParenthesis) {
+		std::cout << "Syntax error (Unclosed parenthesis)" << std::endl;
+		error = true;
+	} if(inAbsoluteValue) {
+		std::cout << "Syntax error (Unclosed absolute value)" << std::endl;
+		error = true;
 	}
 
 	if(error) { exit(-2); } //Exit if there was one
