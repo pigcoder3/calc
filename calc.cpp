@@ -293,6 +293,7 @@ int main(int argc, char **argv) {
 				"  [3] If certain symbols are not placed in their proper positions (or not placed at all), the parser will have incorrect responses (without an error because none will be detected).\n"
 				"    Ex: 4*5(3+2) will output 200. This is because the program will place the output of the stuff within the parenthesis back in the equation (So it will read 4*55).\n"
 				"      To make this work, do 4*5*(3+2) to get the intended result.\n"
+				"    Ex: 4+/7 will output 0.571429. This is because the parser will completely ignore the + sign. (This is completely improper syntax anyway).\n"
 				"\n"
 				"Specific Syntax: (Just throw these together like is done with real equations)\n"
 				"  Add: +\n"
