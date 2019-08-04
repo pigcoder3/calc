@@ -270,14 +270,14 @@ int main(int argc, char **argv) {
 
 	//If the incorrect number of arguments were given, give the usage
 	if(argc < 2 || argc > 4) { 
-		std::cout << "Usage: calc equation [-s] \n";
+		std::cout << "Usage: calc equation [-s] [-n]\n";
 		return 0;
 	}
 
 	for(int i = 0; i < argc; i++) {
 	
 		//Send the help message
-		if(strncmp(argv[i], "--help", strlen(argv[i])) == 0 || strncmp(argv[i], "-h", strlen(argv[i])) == 0) {
+		if(strncmp(argv[i], "--help", strlen("--help")) == 0 || strncmp(argv[i], "-h", strlen("-h")) == 0) {
 			const char* help = "[HELP]\n"
 				"Usage: calc equation [-s] [-n]\n"
 				"       calc -h\n"
@@ -311,6 +311,7 @@ int main(int argc, char **argv) {
 				"  |-5-2| 	= 7\n"
 				"  2/(3V8) 	= 1\n";
 			std::cout << help;
+			exit(0);
 		} else if (strncmp(argv[i], "-s", strlen(argv[i])) == 0) {
 			showSteps = true;
 		} else if (strncmp(argv[i], "-n", strlen(argv[i])) == 0) {
@@ -320,6 +321,63 @@ int main(int argc, char **argv) {
 	//Remove all spaces
 	std::string str = argv[1];
 	str.erase(remove_if(str.begin(), str.end(), ::isspace), str.end());
+
+	//Check for syntax errors
+	bool inAbsoluteValue = false;
+	bool error = false;
+	for(int i=0; i<str.length(); i++) {
+		char c = str[i];
+		if(c == '(') {
+			char c2 = str[i+1];
+			if(c2 == '+' || (c == '-' && !isdigit(str[i+1])) || c2 == '*' || c2 == '/' || c2 == '^' || c2 == 'V') { //extra symbol
+				std::cout << "Syntax error(char: " << i+1 << ") (No preceeding number): " << c << c2 << std::endl; //No preceeding number
+				error = true;
+			}
+		} else if(c == '|') {	
+			char c2 = str[i+1];
+			if(inAbsoluteValue) {
+				if(c2 == '+' || (c == '-' && !isdigit(str[i+1])) || c2 == '*' || c2 == '/' || c2 == '^' || c2 == 'V') { //extra symbol
+					std::cout << "Syntax error(char: " << i+1 << ") (No preceeding number): " << c << c2 << std::endl; //No preceeding number
+					error = true;
+				}
+			}
+			inAbsoluteValue = !inAbsoluteValue;
+		} else if(c == '+' || (c == '-' && !isdigit(str[i+1])) || c == '*' || c == '/' || c == '^' || c == 'V') {
+			if(i == 0) { 
+				std::cout << "Syntax error(char: " << i+1 << ") (No preceeding number): " << c << std::endl; //No preceeding number
+				error = true;
+			} if(i+1 == str.length()) {
+				std::cout << "Syntax error(char: " << i+1 << ") (No following number): " << c << std::endl; //No following number
+				error = true;
+			}
+			char c2 = str[i+1];
+			if(c2 == ')' || (c2 == '|' && inAbsoluteValue)) { //Extra symbol before section end
+				std::cout << "Syntax error(char: " << i+1 << ") (No following number): " << c << c2 << std::endl; //Not following number
+				error = true;
+			} else if(c2 == '+' || (c2 == '-' && !isdigit(str[i+2])) || c2 == '*' || c2 == '/' || c2 == '^' || c2 == 'V') { //Double symbols
+				std::cout << "Syntax error(char: " << i+1 << ") (double symbols): " << c << c2 << std::endl; //double symbols
+				error = true;
+			}
+		} else if(c == '.') { //Extra decimal
+			char c1 = str[i-1];
+			char c2 = str[i+1];
+			if((c1 == '.' || c2 == '.') || (!isdigit(c1) && !isdigit(c2))) {
+				std::cout << "Sytnax error(char: " << i+1 << ") (useless decimal point): " << c1 << c << c2 << std::endl; //Make sure there are no useless decimal points anywhere
+				error = true;
+			}
+		} else if(isdigit(c)) {
+			char c2 = str[i+1];
+			if(c2 == '(' || (c2 == '|' && !inAbsoluteValue)) {
+				std::cout << "Syntax error(char: " << i+1 << ") (unexpected parenthesis or absolute value): " << c << c2 << std::endl;
+				error = true;
+			}
+		} else if(!isdigit(c) && c != '.' && (c != '-' && isdigit(str[i+1]))) {
+			std::cout << "Syntax error(char: " << i+1 << ") (unknown symbol): " << c << std::endl; //Unknown symbol
+			error = true;
+		}
+	}
+
+	if(error) { exit(-2); } //Exit if there was one
 
 	//Begin recursive calculations
 	if(sciNotation) { //Print the result in scientific notation
