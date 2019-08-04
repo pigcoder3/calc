@@ -93,7 +93,11 @@ std::string calculate(std::string equation) {
 						} catch(std::invalid_argument) {
 							std::cout << "Error: invalid syntax. (When using exponents)" << std::endl;
 							exit(-1);
+						} catch(std::out_of_range) {
+							std::cout << "Error: Number too large. (When using exponents)" << std::endl;
+							exit(-1);
 						}
+
 					} else if(equation[i] == 'V') {
 						//std::cout << "Root: " << equation.substr(calculationStartIndex, i) << endl;
 						try {
@@ -104,7 +108,11 @@ std::string calculate(std::string equation) {
 						} catch(std::invalid_argument) {
 							std::cout << "Error: invalid syntax. (When using roots)" << std::endl;
 							exit(-1);
+						} catch(std::out_of_range) {
+							std::cout << "Error: Number too large. (When using roots)" << std::endl;
+							exit(-1);
 						}
+
 					}
 				} else {
 					exponentsOrRoots = true;
@@ -122,6 +130,9 @@ std::string calculate(std::string equation) {
 						} catch(std::invalid_argument) {
 							std::cout << "Error: invalid syntax. (During multiplication)" << std::endl;
 							exit(-1);
+						} catch(std::out_of_range) {
+							std::cout << "Error: Number too large. (During multiplication)" << std::endl;
+							exit(-1);
 						}
 					} else { //Divide
 						try {
@@ -132,7 +143,11 @@ std::string calculate(std::string equation) {
 						} catch(std::invalid_argument) {
 							std::cout << "Error: invalid syntax. (During division)" << std::endl;
 							exit(-1);
+						} catch(std::out_of_range) {
+							std::cout << "Error: Number too large. (During division)" << std::endl;
+							exit(-1);
 						}
+
 					}
 					break;
 				} else {
@@ -153,7 +168,11 @@ std::string calculate(std::string equation) {
 						} catch(std::invalid_argument) {
 							std::cout << "Error: invalid syntax. (During addition)" << std::endl;
 							exit(-1);
+						} catch(std::out_of_range) {
+							std::cout << "Error: Number too large. (During addition)" << std::endl;
+							exit(-1);
 						}
+
 					} else { //Subtract
 						try {
 							long double secondNumber = getNumber(equation, i+1);
@@ -163,7 +182,11 @@ std::string calculate(std::string equation) {
 						} catch(std::invalid_argument) {
 							std::cout << "Error: invalid syntax. (During subtraction)" << std::endl;
 							exit(-1);
+						} catch(std::out_of_range) {
+							std::cout << "Error: Number too large. (During subtraction)" << std::endl;
+							exit(-1);
 						}
+
 					}
 
 					break;
@@ -217,7 +240,11 @@ long double getNumber(std::string input, int index) {
 	} catch (std::invalid_argument) {
 		std::cout << "Error: Invalid syntax. (Unkown origin)" << std::endl;
 		exit(-1);
+	} catch(std::out_of_range) {
+		std::cout << "Error: Number too large. (Unknown origin)" << std::endl;
+		exit(-1);
 	}
+
 }
 
 //Removes all trailing zeros
