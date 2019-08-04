@@ -4,6 +4,7 @@
 #include <cmath>
 
 bool showSteps = false;
+bool sciNotation = false;
 int depth = 0;
 
 void printStep(std::string step);
@@ -268,7 +269,7 @@ std::string removeZeros(std::string input) {
 int main(int argc, char **argv) {
 
 	//If the incorrect number of arguments were given, give the usage
-	if(argc < 2 || argc > 3) { 
+	if(argc < 2 || argc > 4) { 
 		std::cout << "Usage: calc equation [-s] \n";
 		return 0;
 	}
@@ -278,12 +279,13 @@ int main(int argc, char **argv) {
 		//Send the help message
 		if(strncmp(argv[i], "--help", strlen(argv[i])) == 0 || strncmp(argv[i], "-h", strlen(argv[i])) == 0) {
 			const char* help = "[HELP]\n"
-				"Usage: calc [equation]\n"
+				"Usage: calc equation [-s] [-n]\n"
 				"       calc -h\n"
 				"\n"
 				"Options:\n"
 				"  -h - show this help message.\n"
 				"  -s - show steps to solve.\n"
+				"  -n - show result in scientific notation.\n"
 				"\n"
 				"Notes:\n"
 				"  [1] Quotation marks should be present to make sure that your shells interprets the equation as a single argument.\n"
@@ -302,7 +304,7 @@ int main(int argc, char **argv) {
 				"  Power: number^power\n"
 				"  Root: ((root)V(number)) Note that the parenthesis should be present to ensure that the parser reads it the correct way. Inner parenthesis are not necessary if there is only 1 number within.\n"
 				"\n"
-				"Examples:\n"
+				"Examples: [See note 1]\n"
 				"  4*5*(3+2) 	= 100 [See note 3]\n"
 				"  (-4^2)+2/3 	= 16.6666666\n"
 				"  |-5-2| 	= 7\n"
@@ -310,6 +312,8 @@ int main(int argc, char **argv) {
 			std::cout << help;
 		} else if (strncmp(argv[i], "-s", strlen(argv[i])) == 0) {
 			showSteps = true;
+		} else if (strncmp(argv[i], "-n", strlen(argv[i])) == 0) {
+			sciNotation = true;
 		}
 	}
 	//Remove all spaces
@@ -317,7 +321,11 @@ int main(int argc, char **argv) {
 	str.erase(remove_if(str.begin(), str.end(), ::isspace), str.end());
 
 	//Begin recursive calculations
-	std::cout << calculate(str) << std::endl;
+	if(sciNotation) { //Print the result in scientific notation
+		std::cout << std::scientific << stod(calculate(str)) << std::endl;
+	} else {
+		std::cout << calculate(str) << std::endl;	
+	}
 
 	return 0;
 }
