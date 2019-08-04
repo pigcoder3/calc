@@ -3,13 +3,15 @@
 #include <algorithm>
 #include <cmath>
 
+bool showSteps = false;
+int depth = 0;
+
+void printStep(std::string step);
 std::string recreateEquation(std::string equation, int index, int calculationStartIndex, long double newNumber);
 long double getNumber(std::string input, int index);
 std::string removeZeros(std::string input);
 
 std::string calculate(std::string equation) {
-
-	//std::cout << "Calculating: " << equation << std::endl;
 
 	//PEMDAS
 
@@ -27,7 +29,7 @@ std::string calculate(std::string equation) {
 	bool inCalculation = 0;	
 	while(true) {
 
-		//std::cout << equation << std::endl;
+		if(showSteps && !scoutingPhase) { printStep(equation); }
 		
 		if(scoutingPhase) { //Reset everything to scout again
 			parenthesis = false;
@@ -54,6 +56,7 @@ std::string calculate(std::string equation) {
 				parenthesis = true;
 				inCalculation = true;
 			} else if(!scoutingPhase && equation[i] == ')' && inParenthesis) { //When closing parenthesis in calculation phase, use recursion to calculate what is inside
+				depth++;
 				equation = equation.substr(0, calculationStartIndex) + //Beginning
 					calculate(equation.substr(calculationStartIndex+1, i-calculationStartIndex-1)) + //Maths
 					equation.substr(i+1, equation.length()); //End
@@ -83,7 +86,9 @@ std::string calculate(std::string equation) {
 					if(equation[i] == '^') {
 						//std::cout << "Exponent: " << equation.substr(calculationStartIndex, i) << endl;
 						try {
-							long double newNumber = pow(stod(equation.substr(calculationStartIndex, i)), getNumber(equation, i+1));
+							long double secondNumber = getNumber(equation, i+1);
+							long double newNumber = pow(stod(equation.substr(calculationStartIndex, i)), secondNumber);
+							if(showSteps && !scoutingPhase) { printStep("Exponent: " + equation.substr(calculationStartIndex, i+1) + removeZeros(std::to_string(secondNumber))); }
 							equation = recreateEquation(equation, i, calculationStartIndex, newNumber);
 						} catch(std::invalid_argument) {
 							std::cout << "Error: invalid syntax. (When using exponents)" << std::endl;
@@ -92,7 +97,9 @@ std::string calculate(std::string equation) {
 					} else if(equation[i] == 'V') {
 						//std::cout << "Root: " << equation.substr(calculationStartIndex, i) << endl;
 						try {
-							long double newNumber = pow(getNumber(equation, i+1), 1.0/stod(equation.substr(calculationStartIndex, i))); //4^(1/2) = sqrt(4)	
+							long double secondNumber = getNumber(equation, i+1);
+							long double newNumber = pow(secondNumber, 1.0/stod(equation.substr(calculationStartIndex, i))); //4^(1/2) = sqrt(4)	
+							if(showSteps && !scoutingPhase) { printStep("Root: " + equation.substr(calculationStartIndex, i+1) + removeZeros(std::to_string(secondNumber))); }
 							equation = recreateEquation(equation, i, calculationStartIndex, newNumber);
 						} catch(std::invalid_argument) {
 							std::cout << "Error: invalid syntax. (When using roots)" << std::endl;
@@ -107,18 +114,20 @@ std::string calculate(std::string equation) {
 				if(((parenthesis && !inParenthesis) || exponentsOrRoots)) { inCalculation = false;continue;} //Dont use this as part of the equation if there is something higher in PEMDAS
 				if(!scoutingPhase && !parenthesis && !exponentsOrRoots) {
 					if(equation[i] == '*') { //Multiply
-						//std::cout << "Multiply: " << equation.substr(calculationStartIndex, i) << endl;
 						try {
-							long double newNumber = stod(equation.substr(calculationStartIndex, i)) * getNumber(equation, i+1);
+							long double secondNumber = getNumber(equation, i+1);
+							long double newNumber = stod(equation.substr(calculationStartIndex, i)) * secondNumber;
+							if(showSteps && !scoutingPhase) { printStep("Multiply: " + equation.substr(calculationStartIndex, i+1) + removeZeros(std::to_string(secondNumber))); }
 							equation = recreateEquation(equation, i, calculationStartIndex, newNumber);
 						} catch(std::invalid_argument) {
 							std::cout << "Error: invalid syntax. (During multiplication)" << std::endl;
 							exit(-1);
 						}
 					} else { //Divide
-						//std::cout << "Divide: " << equation.substr(calculationStartIndex, i) << endl;
 						try {
-							long double newNumber = stod(equation.substr(calculationStartIndex, i)) / getNumber(equation, i+1);
+							long double secondNumber = getNumber(equation, i+1);
+							long double newNumber = stod(equation.substr(calculationStartIndex, i)) / secondNumber;
+							if(showSteps && !scoutingPhase) { printStep("Divide: " + equation.substr(calculationStartIndex, i+1) + removeZeros(std::to_string(secondNumber))); }
 							equation = recreateEquation(equation, i, calculationStartIndex, newNumber);
 						} catch(std::invalid_argument) {
 							std::cout << "Error: invalid syntax. (During division)" << std::endl;
@@ -136,21 +145,23 @@ std::string calculate(std::string equation) {
 				if(((parenthesis && !inParenthesis) || exponentsOrRoots || multiplyOrDivide)) { inCalculation = false; continue;} //Dont use this as part of the equation if there is something higher in PEMDAS
 				if(!scoutingPhase && !parenthesis && !exponentsOrRoots && !multiplyOrDivide) { //Make sure the other parts of PEMDAS that come first do not exist
 					if(equation[i] == '+') { //Add
-						//std::cout << "Add: " << equation.substr(calculationStartIndex, i) << std::endl;
 						try {
-							long double newNumber = stod(equation.substr(calculationStartIndex, i)) + getNumber(equation, i+1);
+							long double secondNumber = getNumber(equation, i+1);
+							long double newNumber = stod(equation.substr(calculationStartIndex, i)) + secondNumber;
+							if(showSteps && !scoutingPhase) { printStep("Add: " + equation.substr(calculationStartIndex, i+1) + removeZeros(std::to_string(secondNumber))); }
 							equation = recreateEquation(equation, i, calculationStartIndex, newNumber);
 						} catch(std::invalid_argument) {
 							std::cout << "Error: invalid syntax. (During addition)" << std::endl;
 							exit(-1);
 						}
 					} else { //Subtract
-						//std::cout << "Subtract: " << equation.substr(calculationStartIndex, i) << std::endl;
 						try {
-							long double newNumber = stod(equation.substr(calculationStartIndex, i)) - getNumber(equation, i+1);
+							long double secondNumber = getNumber(equation, i+1);
+							long double newNumber = stod(equation.substr(calculationStartIndex, i)) - secondNumber;
+							if(showSteps && !scoutingPhase) { printStep("Subtract: " + equation.substr(calculationStartIndex, i+1) + removeZeros(std::to_string(secondNumber))); }
 							equation = recreateEquation(equation, i, calculationStartIndex, newNumber);
 						} catch(std::invalid_argument) {
-							std::cout << "Error: invalid syntax. ((During subtraction)" << std::endl;
+							std::cout << "Error: invalid syntax. (During subtraction)" << std::endl;
 							exit(-1);
 						}
 					}
@@ -164,8 +175,16 @@ std::string calculate(std::string equation) {
 		calculationStartIndex = 0;
 		scoutingPhase = !scoutingPhase; //Every other loop will be a scouting phase that checks for specific things (PEMDAS)	
 		//Make sure that there is nothing left to calculate
-		if(!scoutingPhase && !parenthesis && !absoluteValue && !exponentsOrRoots && !multiplyOrDivide && !addOrSubtract) { return equation; } //Note the "!scoutingPhase", we just left it
+		if(!scoutingPhase && !parenthesis && !absoluteValue && !exponentsOrRoots && !multiplyOrDivide && !addOrSubtract) { depth--; return equation; } //Note the "!scoutingPhase", we just left it
 	}
+}
+
+void printStep(std::string step) {
+
+	for(int i=0; i<depth; i++) {
+		std::cout << "  "; //Print out a spacing
+	}
+	std::cout << step << std::endl; //Print out the step
 }
 
 //recreates the equation with the new calculated number
@@ -222,46 +241,56 @@ std::string removeZeros(std::string input) {
 int main(int argc, char **argv) {
 
 	//If the incorrect number of arguments were given, give the usage
-	if(argc != 2) { 
-		std::cout << "Usage: calc equation\n";
+	if(argc < 2 || argc > 3) { 
+		std::cout << "Usage: calc equation [-s] \n";
 		return 0;
 	}
 
-	//Send the help message
-	if(strncmp(argv[1], "--help", strlen(argv[1])) == 0 || strncmp(argv[1], "-h", strlen(argv[1])) == 0) {
-		const char* help = "[HELP]\n"
-			"Usage: calc [equation]\n"
-			"       calc -h\n"
-			"\n"
-			"Notes:\n"
-			"  [1] Quotation marks should be present to make sure that your shells interprets the equation as a single argument.\n"
-			"  [2] Calc follows rules of order of operations.\n"
-			"  [3] If certain symbols are not placed in their proper positions (or not placed at all), the parser will have incorrect responses (without an error because none will be detected).\n"
-			"    Ex: 4*5(3+2) will output 200. This is because the program will place the output of the stuff within the parenthesis back in the equation (So it will read 4*55).\n"
-			"      To make this work, do 4*5*(3+2) to get the intended result.\n"
-			"\n"
-			"Specific Syntax: (Just throw these together like is done with real equations)\n"
-			"  Add: +\n"
-			"  Subtract: -\n"
-			"  Divide: /\n"
-			"  Multiply: *\n"
-			"  Parenthesis: ( )\n"
-			"  Absolute Value: | |\n"
-			"  Power: number^power\n"
-			"  Root: ((root)V(number)) Note that the parenthesis should be present to ensure that the parser reads it the correct way. Inner parenthesis are not necessary if there is only 1 number within.\n"
-			"\n"
-			"Examples:\n"
-			"  4*5*(3+2) 	= 100 [See note 3]\n"
-			"  (-4^2)+2/3 	= 16.6666666\n"
-			"  |-5-2| 	= 7\n"
-			"  2/(3V8) 	= 1\n";
-		std::cout << help;
-	} else {
-		//Remove all spaces
-		std::string str = argv[1];
-		str.erase(remove_if(str.begin(), str.end(), ::isspace), str.end());
-
-		//Begin recursive calculations
-		std::cout << calculate(str) << std::endl;
+	for(int i = 0; i < argc; i++) {
+	
+		//Send the help message
+		if(strncmp(argv[i], "--help", strlen(argv[i])) == 0 || strncmp(argv[i], "-h", strlen(argv[i])) == 0) {
+			const char* help = "[HELP]\n"
+				"Usage: calc [equation]\n"
+				"       calc -h\n"
+				"\n"
+				"Options:\n"
+				"  -h - show this help message.\n"
+				"  -s - show steps to solve.\n"
+				"\n"
+				"Notes:\n"
+				"  [1] Quotation marks should be present to make sure that your shells interprets the equation as a single argument.\n"
+				"  [2] Calc follows rules of order of operations.\n"
+				"  [3] If certain symbols are not placed in their proper positions (or not placed at all), the parser will have incorrect responses (without an error because none will be detected).\n"
+				"    Ex: 4*5(3+2) will output 200. This is because the program will place the output of the stuff within the parenthesis back in the equation (So it will read 4*55).\n"
+				"      To make this work, do 4*5*(3+2) to get the intended result.\n"
+				"\n"
+				"Specific Syntax: (Just throw these together like is done with real equations)\n"
+				"  Add: +\n"
+				"  Subtract: -\n"
+				"  Divide: /\n"
+				"  Multiply: *\n"
+				"  Parenthesis: ( )\n"
+				"  Absolute Value: | |\n"
+				"  Power: number^power\n"
+				"  Root: ((root)V(number)) Note that the parenthesis should be present to ensure that the parser reads it the correct way. Inner parenthesis are not necessary if there is only 1 number within.\n"
+				"\n"
+				"Examples:\n"
+				"  4*5*(3+2) 	= 100 [See note 3]\n"
+				"  (-4^2)+2/3 	= 16.6666666\n"
+				"  |-5-2| 	= 7\n"
+				"  2/(3V8) 	= 1\n";
+			std::cout << help;
+		} else if (strncmp(argv[i], "-s", strlen(argv[i])) == 0) {
+			showSteps = true;
+		}
 	}
+	//Remove all spaces
+	std::string str = argv[1];
+	str.erase(remove_if(str.begin(), str.end(), ::isspace), str.end());
+
+	//Begin recursive calculations
+	std::cout << calculate(str) << std::endl;
+
+	return 0;
 }
