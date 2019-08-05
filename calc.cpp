@@ -416,7 +416,7 @@ int main(int argc, char **argv) {
 				std::cout << "Syntax error(char: " << i+1 << ") (unexpected parenthesis or absolute value): " << c << c2 << std::endl;
 				error = true;
 			}
-		} else if(!isdigit(c) && c != '.' && (c != '-' && isdigit(str[i+1]))) {
+		} else if(!isdigit(c) && c != '.' && !(c == '-' && isdigit(str[i+1]))) {
 			std::cout << "Syntax error(char: " << i+1 << ") (unknown symbol): " << c << std::endl; //Unknown symbol
 			error = true;
 		}
