@@ -122,7 +122,7 @@ std::string calculate(std::string equation) {
 				}
 			} else if(equation[i] == '*' || equation[i] == '/') { //Make sure the other parts of PEMDAS that come first do not exist
 				if(inParenthesis || inAbsoluteValue) {continue; }
-				if(((parenthesis && !inParenthesis) || exponentsOrRoots)) { inCalculation = false;continue;} //Dont use this as part of the equation if there is something higher in PEMDAS
+				if(((parenthesis && !inParenthesis) || (absoluteValue && !inAbsoluteValue) || exponentsOrRoots)) { inCalculation = false;continue;} //Dont use this as part of the equation if there is something higher in PEMDAS
 				if(!scoutingPhase && !parenthesis && !exponentsOrRoots) {
 					if(equation[i] == '*') { //Multiply
 						try {
@@ -160,7 +160,7 @@ std::string calculate(std::string equation) {
 				//Special case: The minus sign and the negative sign are the same char. The program checks for a digit to the left. If there is a digit, then this is a minus sign, otherwise it is a negative sign.
 
 				if(inParenthesis || inAbsoluteValue) { continue; }
-				if(((parenthesis && !inParenthesis) || exponentsOrRoots || multiplyOrDivide)) { inCalculation = false; continue;} //Dont use this as part of the equation if there is something higher in PEMDAS
+				if(((parenthesis && !inParenthesis) || (absoluteValue && !inAbsoluteValue) || exponentsOrRoots || multiplyOrDivide)) { inCalculation = false; continue;} //Dont use this as part of the equation if there is something higher in PEMDAS
 				if(!scoutingPhase && !parenthesis && !exponentsOrRoots && !multiplyOrDivide) { //Make sure the other parts of PEMDAS that come first do not exist
 					if(equation[i] == '+') { //Add
 						try {
@@ -235,8 +235,8 @@ long double getNumberAsNumber(std::string input, int index) {
 		}
 	}
 
-	//std::cout << number.length() << std::endl;
-	//std::cout << number << std::endl;
+	std::cout << number.length() << std::endl;
+	std::cout << number << std::endl;
 
 	//Convert the string to long double and return it
 	try {
@@ -361,7 +361,7 @@ int main(int argc, char **argv) {
 
 	//Check for syntax errors
 	bool inAbsoluteValue = false;
-	bool inParenthesis = false;
+	int parenthesisDepth = 0;
 	bool error = false;
 	for(int i=0; i<str.length(); i++) {
 		char c = str[i];
@@ -371,16 +371,17 @@ int main(int argc, char **argv) {
 				std::cout << "Syntax error(char: " << i+1 << ") (No preceeding number): " << c << c2 << std::endl; //No preceeding number
 				error = true;
 			}
-			inParenthesis = true;
+			parenthesisDepth++;
 		} else if(c == ')') {
-			if(!inParenthesis) {
+			if(parenthesisDepth == 0) {
 				std::cout << "Syntax error(char: " << i+1 << ") (Extra parenthesis): " << c << std::endl;
 				error = true;
+			} else {
+				parenthesisDepth--;
 			}
-			inParenthesis = false;
 		} else if(c == '|') {	
 			char c2 = str[i+1];
-			if(inAbsoluteValue) {
+			if(!inAbsoluteValue) {
 				if(c2 == '+' || (c == '-' && !isdigit(str[i+1])) || c2 == '*' || c2 == '/' || c2 == '^' || c2 == 'V') { //extra symbol
 					std::cout << "Syntax error(char: " << i+1 << ") (No preceeding number): " << c << c2 << std::endl; //No preceeding number
 					error = true;
@@ -422,7 +423,7 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	if(inParenthesis) {
+	if(parenthesisDepth != 0) {
 		std::cout << "Syntax error (Unclosed parenthesis)" << std::endl;
 		error = true;
 	} if(inAbsoluteValue) {
