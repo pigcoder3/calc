@@ -592,10 +592,19 @@ char getSymbol(int value) {
 
 std::string error_call(struct node *current) {
 	std::string output = "";
+
+	//Prints the current section
 	if(current->type == 1) {
 		output+=getSymbol(current->value);
 	} else {
 		output+=removeZeros(std::to_string(current->value));
+	}
+
+	//Prints the next section
+	if(current->next != NULL && current->type == 1) {
+		output+=getSymbol(current->next->value);
+	} else {
+		output+=removeZeros(std::to_string(current->next->value));
 	}
 
 	return output;
@@ -672,6 +681,7 @@ int main(int argc, char **argv) {
 	for(int i=0; i<str.length(); i++) {
 		
 		char c = str[i];
+		//std::cout << c << std::endl;
 		if(c == '(') {
 			struct node *node = create_node(1,6);
 			if(i > 0){	
@@ -737,7 +747,7 @@ int main(int argc, char **argv) {
 			}
 			current = node;	
 		} else if(c == '-') { //This one will need some extra work
-			if(isdigit(str[i+1]) || !(str[i+1] == '.' && isdigit(str[i+2]))) { //Next thing is not a number, so this is a minus sign
+			if(!isdigit(str[i+1]) && !(str[i+1] == '.' && isdigit(str[i+2]))) { //Next thing is not a number, so this is a minus sign
 				struct node *node = create_node(1,1);
 				if(i > 0){	
 					current->next = node;
@@ -811,15 +821,15 @@ int main(int argc, char **argv) {
 				} if(current->next == NULL || (current->next != NULL && ((nextType == 1 && nextValue == 7) || (nextValue == 8 && inAbsoluteValue)))) {
 					std::cout << "Syntax error(section: " << i+1 << ") (No following number): " << error_call(current) << std::endl; //No following number
 					error = true;
-				} else if(current->next != NULL && (nextType == 1 && (nextValue == 1 || nextValue == 1 || nextValue == 2 || nextValue == 3 || nextValue == 4 || nextValue == 5))) { //Double symbols
+				} if(current->next != NULL && (nextType == 1 && (nextValue == 0 || nextValue == 1 || nextValue == 2 || nextValue == 3 || nextValue == 4 || nextValue == 5))) { //Double symbols
 					std::cout << "Syntax error(section: " << i+1 << ") (double symbols): " << error_call(current) << std::endl; //double symbols
 					error = true;
 				}
-			} else if(type == 0) {
-				if(current->next != NULL && (nextValue == 6 || (nextValue == 8 && !inAbsoluteValue))) {
-					std::cout << "Syntax error(section: " << i+1 << ") (unexpected parenthesis or absolute value): " << error_call(current) << std::endl;
-					error = true;
-				}
+			}
+		} else if(type == 0) {
+			if(current->next != NULL && (nextValue == 6 || (nextValue == 8 && !inAbsoluteValue))) {
+				std::cout << "Syntax error(section: " << i+1 << ") (unexpected parenthesis or absolute value): " << error_call(current) << std::endl;
+				error = true;
 			}
 		}
 		i++;
