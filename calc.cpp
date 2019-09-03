@@ -822,10 +822,10 @@ int main(int argc, char **argv) {
 
 	//Begin recursive calculations
 	
+	calculate(NULL, 0, i, false);
 	if(sciNotation) { //Print the result in scientific notation
 		std::cout << std::scientific;
 	}
-	calculate(NULL, 0, i, false);
 	std::cout << root->value << std::endl;
 
 	return 0;
