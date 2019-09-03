@@ -5,6 +5,7 @@
 
 bool showSteps = false;
 bool sciNotation = false;
+bool debug = false;
 int depth = 0;
 
 struct node {
@@ -32,7 +33,6 @@ struct node *root = (struct node*)malloc(sizeof(struct node));
 
 int lastNumberGottenLength = 0;
 
-void printStep(std::string step);
 std::string recreateEquation(std::string equation, int index, int calculationStartIndex, long double newNumber);
 long double getNumberAsNumber(std::string input, int index);
 std::string getNumberAsString(std::string input, int index);
@@ -43,17 +43,24 @@ void insertNode(int index, struct node* newNode);
 struct node* jumpTo(int i);
 void printLinkedList();
 int linkedListLength();
+std::string removeZeros(std::string input);
+char getSymbol(int value);
+void printStep(int begin, int length);
 
 void calculate(struct node *sub_root_last, int startIndex, int length, bool absolute_value) {
 
-	//std::cout << "In calculation" << std::endl;
-	//std::cout << "depth: " << depth << std::endl;
+	if(debug) {
+		std::cout << "In calculation" << std::endl;
+		std::cout << "depth: " << depth << std::endl;
+	}
 
 	if(depth > 0) { //Remove any paarenthesis or absolute value symbols to prevent infinite recursion
 		//std::cout << "Removing parenthesis and absolute value symbols" << std::endl;
 		removeNode(startIndex);
-		removeNode(startIndex + length-1);
-		length = length-2;
+		length--;
+		startIndex--;
+		removeNode(startIndex + length+1);
+		length--;
 	}
 
 	//PEMDAS
@@ -77,7 +84,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 	long double result;
 	while(true) {
 
-		//if(showSteps && !scoutingPhase) { printStep(equation); }
+		if(showSteps && !scoutingPhase) { printStep(startIndex, length); }
 		
 		if(scoutingPhase) { //Reset everything to scout again
 			parenthesis = false;
@@ -96,8 +103,6 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 		struct node *current = jumpTo(startIndex);
 		int i=0;
 		
-		//std::cout << "Cycling again, scouting phase: " << scoutingPhase << std::endl;
-
 		while(current != NULL && i < length) {
 
 			int type = current->type;
@@ -106,7 +111,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 			if(!inCalculation && !inParenthesis && !inAbsoluteValue && type == 0) {
 				calculationStartIndex = i;
 				calculation_start_node = current;
-				//std::cout << "Beginning to read a calculation (Number found)" << std::endl;
+				if(debug) { std::cout << "Beginning to read a calculation (Number found)" << std::endl; }
 				calculation_start_node_last = last_node;
 				inCalculation = true;
 			}
@@ -162,7 +167,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 					if(!scoutingPhase && !parenthesis) { //Make sure the other parts of PEMDAS that come first do not exist
 						if(value == 5) {
 							
-							//if(!scoutingPhase) { std::cout << "Exponent" << std::endl; }
+							if(debug && !scoutingPhase) { std::cout << "Exponent" << std::endl; }
 							try {
 								result = pow(last_node->value, current->next->value);
 								replace_nodes(calculationStartIndex-1, calculationStartIndex, startIndex+i+2, result, 3);
@@ -177,7 +182,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 	
 						} else if(value == 4) {
 							
-							//if(!scoutingPhase) { std::cout << "Root" << std::endl; }
+							if(debug && !scoutingPhase) { std::cout << "Root" << std::endl; }
 							try {
 								result = pow(current->next->value, 1.0/(last_node->value));
 								replace_nodes(calculationStartIndex-1, calculationStartIndex, startIndex+i+2, result, 3);
@@ -213,7 +218,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 					else if(!scoutingPhase && !parenthesis && !exponentsOrRoots) {
 						if(value == 2) { //Multiply
 							
-							//if(!scoutingPhase) { std::cout << "Multiplication" << std::endl; }
+							if(debug && !scoutingPhase) { std::cout << "Multiplication" << std::endl; }
 							try {
 								result = last_node->value * current->next->value;
 								replace_nodes(calculationStartIndex-1, calculationStartIndex, startIndex+i+2, result, 3);
@@ -226,7 +231,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 								exit(-1);
 							}
 						} else { //Divide
-							//if(!scoutingPhase) { std::cout << "Division" << std::endl; }
+							if(debug && !scoutingPhase) { std::cout << "Division" << std::endl; }
 							try {
 								result = last_node->value / current->next->value;
 								replace_nodes(calculationStartIndex-1, calculationStartIndex, startIndex+i+2, result, 3);
@@ -254,7 +259,6 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 						continue; 
 					}
 					if(((parenthesis && !inParenthesis) || (absoluteValue && !inAbsoluteValue) || exponentsOrRoots || multiplyOrDivide)) {
-						//std::cout << "Cannot add! Must follow order of operations" << std::endl;
 						i++; //for loop index increase
 						last_node = current;
 						current = current->next;
@@ -263,7 +267,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 					} //Dont use this as part of the equation if there is something higher in PEMDAS
 					if(!scoutingPhase && !parenthesis && !exponentsOrRoots && !multiplyOrDivide) { //Make sure the other parts of PEMDAS that come first do not exist
 						if(value == 0) { //Add
-							if(!scoutingPhase) { std::cout << "Addition" << std::endl; }
+							if(debug && !scoutingPhase) { std::cout << "Addition" << std::endl; }
 							try {
 								result = last_node->value + current->next->value;
 								replace_nodes(calculationStartIndex-1, calculationStartIndex, startIndex+i+2, result, 3);
@@ -276,7 +280,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 								exit(-1);
 							}
 						} else { //Subtract
-							if(!scoutingPhase) { std::cout << "Subtraction" << std::endl; }
+							if(debug && !scoutingPhase) { std::cout << "Subtraction" << std::endl; }
 							try {
 								result = last_node->value - current->next->value;
 								replace_nodes(calculationStartIndex-1, calculationStartIndex, startIndex+i+2, result, 3);
@@ -307,12 +311,8 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 
 			//Do absolute value if this is an absolulte value block
 			if(absolute_value) {
-				std::cout << "Absolute valute time" << std::endl;
 				jumpTo(startIndex)->value = abs(result);
-				printLinkedList();
 			}
-
-			//std::cout << "Done with this calculation" << std::endl;
 
 			return;
 
@@ -321,10 +321,9 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 }
 
 void replace_nodes(int beforeIndex, int startIndex, int afterIndex, long double result, int length) {
-	//std::cout << "replacing nodes" << std::endl;
+	if(debug) { std::cout << "replacing nodes" << std::endl; }
 	//Place the result in the linked list
 	struct node *result_node = (struct node*)malloc(sizeof(struct node));
-	//std::cout << result << std::endl;
 	result_node->type = 0;
 	result_node->value = result;
 
@@ -334,13 +333,13 @@ void replace_nodes(int beforeIndex, int startIndex, int afterIndex, long double 
 
 	insertNode(startIndex, result_node);
 
-	printLinkedList();
+	if(debug) { printLinkedList(); }
 
 }
 
 void removeNode(int index) {
 
-	std::cout << "removing node: " << index << std::endl;
+	if(debug) { std::cout << "removing node: " << index << std::endl; }
 
 	struct node *current = root;
 	struct node *last = (struct node*)malloc(sizeof(struct node));
@@ -355,7 +354,7 @@ void removeNode(int index) {
 
 
 	if(i == 0) {
-		std::cout << "The removed node is at the front" << std::endl;
+		if(debug) { std::cout << "The removed node is at the front" << std::endl; }
 		if(current->next != NULL) {
 			root = current->next;
 			root->next = current->next->next;
@@ -363,20 +362,22 @@ void removeNode(int index) {
 			root = NULL;
 		}
 	} else {
-		//std::cout << "The removed node is somewhere inside the list" << std::endl;
+		if(debug) { std::cout << "The removed node is somewhere inside the list" << std::endl; }
 		last->next = current->next; //Remove it
 	}
 
 	current = NULL;
 
-	printLinkedList();
+	if(debug) { printLinkedList(); }
 
 }
 
 void insertNode(int index, struct node* newNode) {
 	
-	std::cout << "inserting node: " << index << std::endl;	
-	//std::cout << "new node value: " << newNode->value << " Index: " << index << std::endl;
+	if(debug) {
+		std::cout << "inserting node: " << index << std::endl;	
+		std::cout << "new node value: " << newNode->value << " Index: " << index << std::endl;
+	}
 
 	struct node *current = root;
 
@@ -387,27 +388,21 @@ void insertNode(int index, struct node* newNode) {
 		current = current->next;	
 	}
 
-	//std::cout << "length: " << linkedListLength() << " i: " << i <<  std::endl;
-
 	if(i == 0) {
-		//std::cout << "The added node will be at the front" << std::endl;
+		if(debug) { std::cout << "The added node will be at the front" << std::endl; }
 		newNode->next = root; 
 		root = newNode;
 	} else {
-		//std::cout << "The added node will be somewhere inside the list" << std::endl;
+		if(debug) { std::cout << "The added node will be somewhere inside the list" << std::endl; }
 		if(i < linkedListLength()) {
 			newNode->next = current->next; //Remove it
 			current->next = newNode;
 		} else {
 			newNode->next = NULL;
 		}
-		//current->next = (struct node*)malloc(sizeof(struct node));
-		//current->next = newNode;
 	}
 
-	//std::cout << "Node has been added" << std::endl;
-
-	printLinkedList();
+	if(debug) { printLinkedList(); }
 
 }
 
@@ -418,7 +413,6 @@ int linkedListLength() {
 	int len = 0;
 
 	while(current != NULL) {
-		//std::cout << current->value << std::endl;
 		current = current->next;
 		len++;
 	}
@@ -446,7 +440,7 @@ struct node* jumpTo(int i) {
 	
 	struct node *current = root;
 
-	//std::cout << "Jumping to index: " << i << std::endl;
+	if(debug) { std::cout << "Jumping to index: " << i << std::endl; }
 
 	int index=0;
 	while(current != NULL && index < i) {
@@ -457,12 +451,29 @@ struct node* jumpTo(int i) {
 
 }
 
-void printStep(std::string step) {
+void printStep(int begin, int length) {
 
 	for(int i=0; i<depth; i++) {
-		std::cout << "  "; //Print out a spacing
+		std::cout << "  "; //Print out spacing
 	}
-	std::cout << step << std::endl; //Print out the step
+
+	std::string output;
+
+	//build the equation from the linked list
+	struct node *current = jumpTo(begin);
+	int i = 0;
+	while(current != NULL && i <= length) {
+		if(current->type == 0) {
+			output+=removeZeros(std::to_string(current->value));
+		} else {
+			output+=getSymbol(current->value);
+		}
+		current = current->next;
+		i++;
+	}
+
+	std::cout << output << std::endl;
+	printLinkedList();
 }
 
 //Used to get numbers from the equation
@@ -494,26 +505,6 @@ long double getNumberAsNumber(std::string input, int index) {
 
 }
 
-std::string getNumberAsString(std::string input, int index) {
-	std::string number;
-
-	//Add each digit/decimal point to the new string
-	for(int i=index; i<input.length(); i++) {
-		if((isdigit(input[i]) || (input[i] == '-' && number.length() == 0)) || (input[i] == '.')) { //The negative sign would be at the front of the number so we are ok
-			number+=input[i];
-		} else {
-			//The number has ended
-			break;
-		}
-	}
-
-	//std::cout << number.length() << std::endl;
-	//std::cout << number << std::endl;
-
-	return number;
-
-}
-
 //Removes all trailing zeros
 std::string removeZeros(std::string input) {
 
@@ -522,7 +513,7 @@ std::string removeZeros(std::string input) {
 		if(input[i] == '.') { //We have reached the decimal point, we want to preserve everything in front of it
 			input.pop_back();
 			break;
-		} else if(input[i] == '0') {
+		} else if(input[i] == '0' && input.length() > 1) {
 			input.pop_back();
 		} else {
 			break;
@@ -535,7 +526,7 @@ std::string removeZeros(std::string input) {
 			break;
 		} else if(input[i] == '-') {
 			//We dont want to remove the negative sign so do nothing
-		} else if(input[i] == '0') {
+		} else if(input[i] == '0' && input.length() > 1) {
 			input.erase(0, 1);
 			i--;
 		} else {
@@ -582,10 +573,12 @@ std::string error_call(struct node *current) {
 	}
 
 	//Prints the next section
-	if(current->next != NULL && current->type == 1) {
-		output+=getSymbol(current->next->value);
-	} else {
-		output+=removeZeros(std::to_string(current->next->value));
+	if(current->next != NULL) {
+		if(current->next->type == 1) {
+			output+=getSymbol(current->next->value);
+		} else {
+			output+=removeZeros(std::to_string(current->next->value));
+		}
 	}
 
 	return output;
@@ -613,21 +606,18 @@ int main(int argc, char **argv) {
 		//Send the help message
 		if(strncmp(argv[i], "--help", strlen("--help")) == 0 || strncmp(argv[i], "-h", strlen("-h")) == 0) {
 			const char* help = "[HELP]\n"
-				"Usage: calc equation [-s] [-n]\n"
+				"Usage: calc equation [-s] [-n] [-d]\n"
 				"       calc -h\n"
 				"\n"
 				"Options:\n"
 				"  -h - show this help message.\n"
 				"  -s - show steps to solve.\n"
 				"  -n - show result in scientific notation.\n"
+				"  -d - Show debug messages.\n"
 				"\n"
 				"Notes:\n"
-				"  [1] Quotation marks should be present to make sure that your shells interprets the equation as a single argument.\n"
+				"  [1] Quotation marks should be present to make sure that your shell interprets the equation as a single argument.\n"
 				"  [2] Calc follows rules of order of operations.\n"
-				"  [3] If certain symbols are not placed in their proper positions (or not placed at all), the parser will have incorrect responses (without an error because none will be detected).\n"
-				"    Ex: 4*5(3+2) will output 200. This is because the program will place the output of the stuff within the parenthesis back in the equation (So it will read 4*55).\n"
-				"      To make this work, do 4*5*(3+2) to get the intended result.\n"
-				"    Ex: 4+/7 will output 0.571429. This is because the parser will completely ignore the + sign. (This is completely improper syntax anyway).\n"
 				"\n"
 				"Specific Syntax: (Just throw these together like is done with real equations)\n"
 				"  Add: +\n"
@@ -650,6 +640,8 @@ int main(int argc, char **argv) {
 			showSteps = true;
 		} else if (strncmp(argv[i], "-n", strlen(argv[i])) == 0) {
 			sciNotation = true;
+		} else if (strncmp(argv[i], "-d", strlen(argv[i])) == 0) {
+			debug = true;
 		}
 	}
 	//Remove all spaces
@@ -757,8 +749,6 @@ int main(int argc, char **argv) {
 		}
 
 	}
-
-	printLinkedList();
 
 	//Check for syntax errors
 	bool inAbsoluteValue = false;
