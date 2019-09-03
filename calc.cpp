@@ -58,8 +58,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 		//std::cout << "Removing parenthesis and absolute value symbols" << std::endl;
 		removeNode(startIndex);
 		length--;
-		startIndex--;
-		removeNode(startIndex + length+1);
+		removeNode(startIndex + length);
 		length--;
 	}
 
@@ -102,8 +101,8 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 
 		struct node *current = jumpTo(startIndex);
 		int i=0;
-		
-		while(current != NULL && i < length) {
+
+		while(current != NULL && i <= length) {
 
 			int type = current->type;
 			long double value = current->value;
@@ -125,7 +124,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 				} else if(!scoutingPhase && value == 7 && inParenthesis) { //When closing parenthesis in calculation phase, use recursion to calculate what is inside
 					depth++;
 
-					calculate(calculation_start_node_last, calculationStartIndex+startIndex, i-calculationStartIndex, false); 
+					calculate(calculation_start_node_last, startIndex+calculationStartIndex, i-calculationStartIndex, false); 
 					length-=i-calculationStartIndex;
 						
 					inParenthesis = false;
@@ -134,7 +133,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 					if(!scoutingPhase) {
 						if(inAbsoluteValue) { //The end of the absolute value block
 							depth++;	
-							calculate(calculation_start_node_last, calculationStartIndex+startIndex, i-calculationStartIndex, true);
+							calculate(calculation_start_node_last, startIndex+calculationStartIndex, i-calculationStartIndex, true);
 							length-=i-calculationStartIndex;
 							inAbsoluteValue = false;
 							break;
@@ -170,7 +169,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 							if(debug && !scoutingPhase) { std::cout << "Exponent" << std::endl; }
 							try {
 								result = pow(last_node->value, current->next->value);
-								replace_nodes(calculationStartIndex-1, calculationStartIndex, startIndex+i+2, result, 3);
+								replace_nodes(calculationStartIndex-1, calculationStartIndex+startIndex, startIndex+i+2, result, 3);
 								length-=2;
 							} catch(std::invalid_argument) {
 								std::cout << "Error: invalid syntax. (When using exponents)" << std::endl;
@@ -185,7 +184,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 							if(debug && !scoutingPhase) { std::cout << "Root" << std::endl; }
 							try {
 								result = pow(current->next->value, 1.0/(last_node->value));
-								replace_nodes(calculationStartIndex-1, calculationStartIndex, startIndex+i+2, result, 3);
+								replace_nodes(calculationStartIndex-1, calculationStartIndex+startIndex, startIndex+i+2, result, 3);
 								length-=2;
 							} catch(std::invalid_argument) {
 								std::cout << "Error: invalid syntax. (When using roots)" << std::endl;
@@ -221,7 +220,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 							if(debug && !scoutingPhase) { std::cout << "Multiplication" << std::endl; }
 							try {
 								result = last_node->value * current->next->value;
-								replace_nodes(calculationStartIndex-1, calculationStartIndex, startIndex+i+2, result, 3);
+								replace_nodes(calculationStartIndex-1, calculationStartIndex+startIndex, startIndex+i+2, result, 3);
 								length-=2;
 							} catch(std::invalid_argument) {
 								std::cout << "Error: invalid syntax. (During multiplication)" << std::endl;
@@ -234,7 +233,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 							if(debug && !scoutingPhase) { std::cout << "Division" << std::endl; }
 							try {
 								result = last_node->value / current->next->value;
-								replace_nodes(calculationStartIndex-1, calculationStartIndex, startIndex+i+2, result, 3);
+								replace_nodes(calculationStartIndex-1, calculationStartIndex+startIndex, startIndex+i+2, result, 3);
 								length-=2;	
 							} catch(std::invalid_argument) {
 								std::cout << "Error: invalid syntax. (During division)" << std::endl;
@@ -270,7 +269,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 							if(debug && !scoutingPhase) { std::cout << "Addition" << std::endl; }
 							try {
 								result = last_node->value + current->next->value;
-								replace_nodes(calculationStartIndex-1, calculationStartIndex, startIndex+i+2, result, 3);
+								replace_nodes(calculationStartIndex-1, calculationStartIndex+startIndex, startIndex+i+2, result, 3);
 								length-=2;	
 							} catch(std::invalid_argument) {
 								std::cout << "Error: invalid syntax. (During addition)" << std::endl;
@@ -283,7 +282,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 							if(debug && !scoutingPhase) { std::cout << "Subtraction" << std::endl; }
 							try {
 								result = last_node->value - current->next->value;
-								replace_nodes(calculationStartIndex-1, calculationStartIndex, startIndex+i+2, result, 3);
+								replace_nodes(calculationStartIndex-1, calculationStartIndex+startIndex, startIndex+i+2, result, 3);
 								length-=2;
 							} catch(std::invalid_argument) {
 								std::cout << "Error: invalid syntax. (During subtraction)" << std::endl;
@@ -313,6 +312,8 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 			if(absolute_value) {
 				jumpTo(startIndex)->value = abs(result);
 			}
+
+			if(debug) { std::cout << "Done with this calculation" << std::endl; }
 
 			return;
 
@@ -445,6 +446,7 @@ struct node* jumpTo(int i) {
 	int index=0;
 	while(current != NULL && index < i) {
 		current = current->next;
+		index++;
 	}
 
 	return current;
@@ -473,7 +475,6 @@ void printStep(int begin, int length) {
 	}
 
 	std::cout << output << std::endl;
-	printLinkedList();
 }
 
 //Used to get numbers from the equation
@@ -719,7 +720,7 @@ int main(int argc, char **argv) {
 			}
 			current = node;	
 		} else if(c == '-') {
-			if(isdigit(str[i+1]) && !(i > 0 && (str[i-1] == '-')) && !(str[i+1] == '.' && isdigit(str[i+2]))) { //Next thing is not a number, so this is a minus sign
+			if((isdigit(str[i+1]) && !(i > 0 && (str[i-1] == '-')) && !(str[i+1] == '.' && isdigit(str[i+2]))) || (str[i+1] == '(' || str[i+1] == '|')) { //Next thing is not a number, so this is a minus sign
 				struct node *node = create_node(1,1);
 				if(i > 0){	
 					current->next = node;
