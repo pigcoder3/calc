@@ -74,10 +74,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 	bool inAbsoluteValue = false;
 	bool scoutingPhase = true;
 	struct node *last_node = sub_root_last;	
-	struct node *next_calculation_root = (struct node*)malloc(sizeof(struct node));
 	struct node *calculation_start_node_last = sub_root_last;
-	struct node *calculation_start_node = (struct node*)malloc(sizeof(struct node));
-	struct node *calculation_end_node = (struct node*)malloc(sizeof(struct node));
 	int calculationStartIndex = 0;
 	bool inCalculation = 0;	
 	long double result;
@@ -93,8 +90,6 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 			addOrSubtract = false;
 			inParenthesis = false;
 			inAbsoluteValue = false;
-			calculation_start_node = 0;
-			calculation_end_node = 0;
 			calculationStartIndex = 0;
 			inCalculation = 0;
 		}
@@ -109,7 +104,6 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 
 			if(!inCalculation && !inParenthesis && !inAbsoluteValue && type == 0) {
 				calculationStartIndex = i;
-				calculation_start_node = current;
 				if(debug) { std::cout << "Beginning to read a calculation (Number found)" << std::endl; }
 				calculation_start_node_last = last_node;
 				inCalculation = true;
@@ -497,10 +491,10 @@ long double getNumberAsNumber(std::string input, int index) {
 	try {
 		return stod(number);
 	} catch (std::invalid_argument) {
-		//std::cout << "Error: Invalid syntax. (Unkown origin)" << std::endl;
+		std::cout << "Error: Invalid number. (Unkown origin)" << std::endl;
 		exit(-1);
 	} catch(std::out_of_range) {
-		//std::cout << "Error: Number too large. (Unknown origin)" << std::endl;
+		std::cout << "Error: Number too large. (Unknown origin)" << std::endl;
 		exit(-1);
 	}
 
@@ -597,8 +591,8 @@ struct node* create_node(int type, int value) {
 int main(int argc, char **argv) {
 
 	//If the incorrect number of arguments were given, give the usage
-	if(argc < 2 || argc > 4) { 
-		std::cout << "Usage: calc equation [-s] [-n]\n";
+	if(argc < 2 || argc > 5) { 
+		std::cout << "Usage: calc equation [-s] [-n] [-h] [-d]\n";
 		return 0;
 	}
 
@@ -720,7 +714,10 @@ int main(int argc, char **argv) {
 			}
 			current = node;	
 		} else if(c == '-') {
-			if((isdigit(str[i+1]) && !(i > 0 && (str[i-1] == '-')) && !(str[i+1] == '.' && isdigit(str[i+2]))) || (str[i+1] == '(' || str[i+1] == '|')) { //Next thing is not a number, so this is a minus sign
+			if(
+			(!isdigit(str[i+1]) && !(str[i+1] == '.' && isdigit(str[i+2])) && !(str[i+1] == '-' && str[i+2] == '.' && isdigit(str[i+3])))
+			|| (str[i+1] == '(' || str[i+1] == '|')
+			) { //Next thing is not a number, so this is a minus sign
 				struct node *node = create_node(1,1);
 				if(i > 0){	
 					current->next = node;
