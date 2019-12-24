@@ -60,6 +60,10 @@ test:
 run: $(OUTPUTFILE)
 	./$(OUTPUTFILE)
 
+.PHONY: install
+install: compile
+	cp $(OUTPUTFILE) /usr/local/bin/calc	
+
 .PHONY: clean
 clean:
 	rm -rf $(SRCBIN)
