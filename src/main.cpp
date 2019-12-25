@@ -56,6 +56,17 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	parse(argv[1]);
+	int length = parse(argv[1]);
+
+	//Begin recursive calculations
+
+	calculate(NULL, 0, length, false);
+	if(sciNotation) { //Print the result in scientific notation
+		std::cout << std::scientific;
+	}
+
+	std::cout << root->value << std::endl;
+
+	return 0;
 
 }

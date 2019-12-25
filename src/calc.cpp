@@ -6,6 +6,7 @@
 bool showSteps = false;
 bool sciNotation = false;
 bool debug = false;
+bool disableSyntaxCheck = false;
 int depth = 0;
 int listLength = 0; //NOTE: This is not the same this as length, which is the length of the current calculation
 
@@ -323,6 +324,7 @@ void replace_nodes(int beforeIndex, int startIndex, int afterIndex, long double 
 	result_node->type = 0;
 	result_node->value = result;
 
+	//Figure out how to optimise this
 	for(int i=0; i<length; i++) {
 		removeNode(startIndex);
 	}
@@ -422,8 +424,6 @@ int linkedListLength() {
 void printLinkedList() {
 
 	struct node *current = root;
-
-	std::cout << "Printing linked list: ";
 
 	while(current != NULL) {
 		std::cout << current->value << ", ";
@@ -561,6 +561,7 @@ char getSymbol(int value) {
 }
 
 std::string error_call(struct node *current) {
+
 	std::string output = "";
 
 	//Prints the current section
@@ -587,7 +588,24 @@ struct node* create_node(int type, int value) {
 	struct node *node = (struct node*)malloc(sizeof(struct node));
 	node->type = type; //Set its values
 	node->value = value;
+	node->next = NULL;
 	return node;
+
+}
+
+//Free the entire list
+void clean() {
+
+	struct node *current = root;
+
+	while(current) {
+		node* last = current;	
+		current = current->next;
+	}
+
+	root = NULL;
+
+	listLength = 0;
 
 }
 
@@ -598,11 +616,11 @@ int parse(char *equation) {
 	std::string str = equation;
 	str.erase(remove_if(str.begin(), str.end(), ::isspace), str.end());
 
+	clean(); //Reset the thing (Just for convenience for tests)
 	struct node *current = root;
 
 	//Turn the equation into a linked list
 	for(int i=0; i<str.length(); i++) {
-		
 		char c = str[i];
 		if(c == '(') {
 			struct node *node = create_node(1,6);
@@ -669,10 +687,11 @@ int parse(char *equation) {
 			}
 			current = node;	
 		} else if(c == '-') {
-			if(
-			(!isdigit(str[i+1]) && !(str[i+1] == '.' && isdigit(str[i+2])) && !(str[i+1] == '-' && str[i+2] == '.' && isdigit(str[i+3])))
+			if (
+			(i>0 && (isdigit(str[i-1]) || str[i-1] == ')' || str[i-1] == '|'))
+			|| (!isdigit(str[i+1]) && !(str[i+1] == '.' && isdigit(str[i+2])) && !(str[i+1] == '-' && str[i+2] == '.' && isdigit(str[i+3])))
 			|| (str[i+1] == '(' || str[i+1] == '|')
-			) { //Next thing is not a number, so this is a minus sign
+			) { //No number so this is is a negative
 				struct node *node = create_node(1,1);
 				if(i > 0){	
 					current->next = node;
@@ -701,7 +720,13 @@ int parse(char *equation) {
 			i+=lastNumberGottenLength-1;
 		}
 
+		listLength++;
+
 	}
+
+	if(debug) { std::cout << "New parsed equation: "; printLinkedList(); std::cout << std::endl; }
+
+	if(!disableSyntaxCheck) { return listLength; } //All there is left to do here is syntax checking
 
 	//Check for syntax errors
 	bool inAbsoluteValue = false;
@@ -714,11 +739,11 @@ int parse(char *equation) {
 		long double value = current->value;
 		int nextType;
 		long double nextValue;
-		//std::cout << type << " " << value << std::endl;;
-		if(current->next != NULL) {
+		if(current->next) {
 			nextType = current->next->type;
 			nextValue = current->next->value;
 		}
+		
 		if(type == 1) {
 			if(value == 6) { //Opening parenthesis
 				if(current->next->type == 1 && current->next->value != 8) { //Only numbers can follow
@@ -726,14 +751,14 @@ int parse(char *equation) {
 					error = true;
 				}
 				parenthesisDepth++;
-			} else if(value == 7) {
+			} else if(value == 7) { //Closing parenthesis
 				if(parenthesisDepth == 0) {
 					std::cout << "Syntax error(section: " << i+1 << ") (Extra parenthesis): " << error_call(current) << std::endl;
 					error = true;
 				} else {
 					parenthesisDepth--;
 				}
-			} else if(value == 8) {
+			} else if(value == 8) { //Absolute Value
 				if(!inAbsoluteValue) {
 					if(nextType == 1 && (nextValue == 0 || nextValue == 1 || nextValue == 2 || nextValue == 3 || nextValue == 4 || nextValue == 5)) {
 						std::cout << "Syntax error(section: " << i+1 << ") (No preceeding number): " << error_call(current) << std::endl; //No preceeding number
@@ -743,8 +768,32 @@ int parse(char *equation) {
 				} else {
 					inAbsoluteValue = false;
 				}
-			} else if(value == 0 || value == 1 || value == 2 || value == 3 || value == 4 || value == 5) {
-				if(i == 0) { 
+			/*
+			} else if(value == 1) {
+				/
+				if(
+					(i>0 && (isdigit(str[i-1]) || str[i-1] != '(' || str[i-1] == ')' || str[i-1] == '|'))
+					|| (!isdigit(str[i+1]) && !(str[i+1] == '.' && isdigit(str[i+2])) && !(str[i+1] == '-' && str[i+2] == '.' && isdigit(str[i+3])))
+					|| (str[i+1] == '(' || str[i+1] == '|')
+				) { //Then it is a minus sign for sure
+					if(i == 0) { 
+						std::cout << "Syntax error(section: " << i+1 << ") (No preceeding number): " << error_call(current) << std::endl; //No preceeding number
+						error = true;
+					} if(current->next == NULL || (current->next != NULL && ((nextType == 1 && nextValue == 7) || (nextType == 1 && nextValue == 8 && inAbsoluteValue)))) {
+						std::cout << "Syntax error(section: " << i+1 << ") (No following number): " << error_call(current) << std::endl; //No following number
+						error = true;
+					} if(current->next != NULL && (nextType == 1 && (nextValue == 0 || nextValue == 1 || nextValue == 2 || nextValue == 3 || nextValue == 4 || nextValue == 5))) { //Double symbols
+						std::cout << "Syntax error(section: " << i+1 << ") (double symbols): " << error_call(current) << std::endl; //double symbols
+						error = true;
+					}
+				} else { //It is a negative sign
+						
+
+
+
+*/
+			} else if(value == 0 || value == 1 || value == 2 || value == 3 || value == 4 || value == 5) { //Note that the minus/negative is there
+				if(i == 0 && value != 1) { 
 					std::cout << "Syntax error(section: " << i+1 << ") (No preceeding number): " << error_call(current) << std::endl; //No preceeding number
 					error = true;
 				} if(current->next == NULL || (current->next != NULL && ((nextType == 1 && nextValue == 7) || (nextType == 1 && nextValue == 8 && inAbsoluteValue)))) {
@@ -756,13 +805,16 @@ int parse(char *equation) {
 				}
 			}
 		} else if(type == 0) {
+			
 			if(current->next != NULL && (current->next->type == 1 && (nextValue == 6 || (nextValue == 8 && !inAbsoluteValue)))) {
 				std::cout << "Syntax error(section: " << i+1 << ") (unexpected parenthesis or absolute value): " << error_call(current) << std::endl;
 				error = true;
 			}
 		}
+
 		i++;
 		current = current->next;
+		
 	}
 
 	if(parenthesisDepth != 0) {
@@ -775,13 +827,6 @@ int parse(char *equation) {
 
 	if(error) { exit(-2); } //Exit if there was one
 
-	//Begin recursive calculations
-	
-	calculate(NULL, 0, i, false);
-	if(sciNotation) { //Print the result in scientific notation
-		std::cout << std::scientific;
-	}
-	std::cout << root->value << std::endl;
+	return listLength;
 
-	return 0;
 }
