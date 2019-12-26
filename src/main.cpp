@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
 		std::cout << std::scientific;
 	}
 
-	std::cout << root->value << std::endl;
+	std::cout << list->root->value << std::endl;
 
 	return 0;
 

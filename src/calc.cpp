@@ -3,20 +3,15 @@
 #include <algorithm>
 #include <cmath>
 
+#include "calc.h"
+
 bool showSteps = false;
 bool sciNotation = false;
 bool debug = false;
 bool disableSyntaxCheck = false;
 int depth = 0;
-int listLength = 0; //NOTE: This is not the same this as length, which is the length of the current calculation
 
-struct node {
-	int type;
-	long double value;
-	struct node *next;
-};
-
-struct node *root = (struct node*)malloc(sizeof(struct node));
+LinkedList *list = new LinkedList();
 
 //types:
 // 0: regular number
@@ -35,19 +30,20 @@ struct node *root = (struct node*)malloc(sizeof(struct node));
 
 int lastNumberGottenLength = 0;
 
-std::string recreateEquation(std::string equation, int index, int calculationStartIndex, long double newNumber);
+//std::string recreateEquation(std::string equation, int index, int calculationStartIndex, long double newNumber);
 long double getNumberAsNumber(std::string input, int index);
 std::string getNumberAsString(std::string input, int index);
 std::string removeZeros(std::string input);
-void replace_nodes(int beforeIndex, int startIndex, int afterIndex, long double result, int length);
-void removeNode(int index);
-void insertNode(int index, struct node* newNode);
-struct node* jumpTo(int i);
-void printLinkedList();
-int linkedListLength();
+/*
+void LinkedList::replace_nodes(struct node *start_node, int beforeIndex, int startIndex, int afterIndex, long double result, int length);
+void LinkedList::removeNode(struct node *node);
+void LinkedList::insertNode(int index, struct node* newNode);
+struct node* LinkedList::jumpTo(int i);
+void LinkedList::display();
+int LinkedList::length();*/
 std::string removeZeros(std::string input);
 char getSymbol(int value);
-void printStep(int begin, int length);
+void printStep(std::string operation, int begin, int length);
 
 void calculate(struct node *sub_root_last, int startIndex, int length, bool absolute_value) {
 
@@ -58,9 +54,19 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 
 	if(depth > 0) { //Remove any paarenthesis or absolute value symbols to prevent infinite recursion
 		//std::cout << "Removing parenthesis and absolute value symbols" << std::endl;
-		removeNode(startIndex);
+
+		list->removeNode(sub_root_last->next);
 		length--;
-		removeNode(startIndex + length);
+		//Get to the thing
+		struct node *current = sub_root_last;
+
+		int i=0;
+		while(current && i<length) {
+			current = current->next;
+			i++;
+		}
+
+		list->removeNode(current); //remove it (This is much more optimized)
 		length--;
 	}
 
@@ -82,7 +88,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 	long double result;
 	while(true) {
 
-		if(showSteps && !scoutingPhase) { printStep(startIndex, length); }
+		if(showSteps && !scoutingPhase) { printStep("", startIndex, length); }
 		
 		if(scoutingPhase) { //Reset everything to scout again
 			parenthesis = false;
@@ -96,10 +102,10 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 			inCalculation = 0;
 		}
 
-		struct node *current = jumpTo(startIndex);
+		struct node *current = list->jumpTo(startIndex);
 		int i=0;
 
-		while(current != NULL && i <= length) {
+		while(current != NULL && i < length) {
 
 			int type = current->type;
 			long double value = current->value;
@@ -114,13 +120,13 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 			if(type == 1) {
 				if(value == 6) { //Getting the open parenthesis
 					calculationStartIndex = i;
+					calculation_start_node_last = last_node;
 					inParenthesis = true;
 					parenthesis = true;
 					inCalculation = true;
 				} else if(!scoutingPhase && value == 7 && inParenthesis) { //When closing parenthesis in calculation phase, use recursion to calculate what is inside
 					depth++;
-
-					calculate(calculation_start_node_last, startIndex+calculationStartIndex, i-calculationStartIndex, false); 
+					calculate(calculation_start_node_last, startIndex+calculationStartIndex, i-calculationStartIndex+1, false); 
 					length-=i-calculationStartIndex;
 						
 					inParenthesis = false;
@@ -162,10 +168,10 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 					if(!scoutingPhase && !parenthesis) { //Make sure the other parts of PEMDAS that come first do not exist
 						if(value == 5) {
 							
-							if(debug && !scoutingPhase) { std::cout << "Exponent" << std::endl; }
+							if((showSteps || debug) && !scoutingPhase) { printStep("Exponent: ", calculationStartIndex+startIndex, 3); }
 							try {
 								result = pow(last_node->value, current->next->value);
-								replace_nodes(calculationStartIndex-1, calculationStartIndex+startIndex, startIndex+i+2, result, 3);
+								list->replace_nodes(last_node, calculationStartIndex-1, calculationStartIndex+startIndex, startIndex+i+2, result, 3);
 								length-=2;
 							} catch(std::invalid_argument) {
 								std::cout << "Error: invalid syntax. (When using exponents)" << std::endl;
@@ -177,10 +183,10 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 	
 						} else if(value == 4) {
 							
-							if(debug && !scoutingPhase) { std::cout << "Root" << std::endl; }
+							if((showSteps || debug) && !scoutingPhase) { printStep("Root: ", calculationStartIndex+startIndex, 3); }
 							try {
 								result = pow(current->next->value, 1.0/(last_node->value));
-								replace_nodes(calculationStartIndex-1, calculationStartIndex+startIndex, startIndex+i+2, result, 3);
+								list->replace_nodes(last_node, calculationStartIndex-1, calculationStartIndex+startIndex, startIndex+i+2, result, 3);
 								length-=2;
 							} catch(std::invalid_argument) {
 								std::cout << "Error: invalid syntax. (When using roots)" << std::endl;
@@ -213,10 +219,10 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 					else if(!scoutingPhase && !parenthesis && !exponentsOrRoots) {
 						if(value == 2) { //Multiply
 							
-							if(debug && !scoutingPhase) { std::cout << "Multiplication" << std::endl; }
+							if((showSteps || debug) && !scoutingPhase) { printStep("Multiplication: ", calculationStartIndex+startIndex, 3); }
 							try {
 								result = last_node->value * current->next->value;
-								replace_nodes(calculationStartIndex-1, calculationStartIndex+startIndex, startIndex+i+2, result, 3);
+								list->replace_nodes(last_node, calculationStartIndex-1, calculationStartIndex+startIndex, startIndex+i+2, result, 3);
 								length-=2;
 							} catch(std::invalid_argument) {
 								std::cout << "Error: invalid syntax. (During multiplication)" << std::endl;
@@ -226,10 +232,10 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 								exit(-1);
 							}
 						} else { //Divide
-							if(debug && !scoutingPhase) { std::cout << "Division" << std::endl; }
+							if((showSteps || debug) && !scoutingPhase) { printStep("Division: ", calculationStartIndex+startIndex, 3); }
 							try {
 								result = last_node->value / current->next->value;
-								replace_nodes(calculationStartIndex-1, calculationStartIndex+startIndex, startIndex+i+2, result, 3);
+								list->replace_nodes(last_node, calculationStartIndex-1, calculationStartIndex+startIndex, startIndex+i+2, result, 3);
 								length-=2;	
 							} catch(std::invalid_argument) {
 								std::cout << "Error: invalid syntax. (During division)" << std::endl;
@@ -262,10 +268,10 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 					} //Dont use this as part of the equation if there is something higher in PEMDAS
 					if(!scoutingPhase && !parenthesis && !exponentsOrRoots && !multiplyOrDivide) { //Make sure the other parts of PEMDAS that come first do not exist
 						if(value == 0) { //Add
-							if(debug && !scoutingPhase) { std::cout << "Addition" << std::endl; }
+							if((showSteps || debug) && !scoutingPhase) { printStep("Addition: ", calculationStartIndex+startIndex, 3); }
 							try {
 								result = last_node->value + current->next->value;
-								replace_nodes(calculationStartIndex-1, calculationStartIndex+startIndex, startIndex+i+2, result, 3);
+								list->replace_nodes(last_node, calculationStartIndex-1, calculationStartIndex+startIndex, startIndex+i+2, result, 3);
 								length-=2;	
 							} catch(std::invalid_argument) {
 								std::cout << "Error: invalid syntax. (During addition)" << std::endl;
@@ -275,10 +281,10 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 								exit(-1);
 							}
 						} else { //Subtract
-							if(debug && !scoutingPhase) { std::cout << "Subtraction" << std::endl; }
+							if((showSteps || debug) && !scoutingPhase) { printStep("Subtract: ", calculationStartIndex+startIndex, 3); }
 							try {
 								result = last_node->value - current->next->value;
-								replace_nodes(calculationStartIndex-1, calculationStartIndex+startIndex, startIndex+i+2, result, 3);
+								list->replace_nodes(last_node, calculationStartIndex-1, calculationStartIndex+startIndex, startIndex+i+2, result, 3);
 								length-=2;
 							} catch(std::invalid_argument) {
 								std::cout << "Error: invalid syntax. (During subtraction)" << std::endl;
@@ -306,7 +312,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 
 			//Do absolute value if this is an absolulte value block
 			if(absolute_value) {
-				jumpTo(startIndex)->value = abs(result);
+				list->jumpTo(startIndex)->value = abs(result);
 			}
 
 			if(debug) { std::cout << "Done with this calculation" << std::endl; }
@@ -317,98 +323,128 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 	}
 }
 
-void replace_nodes(int beforeIndex, int startIndex, int afterIndex, long double result, int length) {
-	if(debug) { std::cout << "replacing nodes" << std::endl; }
+void LinkedList::replace_nodes(struct node *start_node, int beforeIndex, int startIndex, int afterIndex, long double result, int length) {
+	if(debug) { std::cout << "replacing nodes" << "LENGTH: " << length << std::endl; }
 	//Place the result in the linked list
 	struct node *result_node = (struct node*)malloc(sizeof(struct node));
 	result_node->type = 0;
 	result_node->value = result;
 
-	//Figure out how to optimise this
-	for(int i=0; i<length; i++) {
-		removeNode(startIndex);
+	struct node *current = start_node;
+	struct node *temp;
+
+	//Figure out how to optimize this
+	int i=0;
+	while(current && i<length) {
+		temp = current->next;
+		list->removeNode(current);
+		current = temp;
+		i++;
 	}
 
-	insertNode(startIndex, result_node);
+	list->insertNode(startIndex, result_node);
 
-	if(debug) { printLinkedList(); }
+	if(debug) { list->display(); }
 
 }
 
-void removeNode(int index) {
+void LinkedList::removeNode(struct node *node) {
+	if(debug) { list->display(); std::cout << "removing node: " << node->value << std::endl; }
 
-	if(debug) { std::cout << "removing node: " << index << std::endl; }
+	//struct node *current = list->root;
+	//struct node *last = (struct node*)malloc(sizeof(struct node));
 
-	struct node *current = root;
-	struct node *last = (struct node*)malloc(sizeof(struct node));
-
-	int i=0;
-
-	while(current != NULL && i < index) { //Get to the right place
-		i++;
-		last = current;
-		current = current->next;	
-	}
-
-
-	if(i == 0) {
+	if(!node->previous) { //If it is the root
 		if(debug) { std::cout << "The removed node is at the front" << std::endl; }
-		if(current->next != NULL) {
-			root = current->next;
-			root->next = current->next->next;
-		} else {
-			root = NULL;
+		if(node->next != NULL) {
+			list->root = root->next;
+			node->next = NULL;
+  			delete node;
+			node = NULL;
+
+			list->root->previous = NULL;
+		} else { //This is the only thing in the list
+			delete list->root;
+			list->root = NULL;
 		}
 	} else {
-		if(debug) { std::cout << "The removed node is somewhere inside the list" << std::endl; }
-		last->next = current->next; //Remove it
+		
+		if(!node->next) { //It is at the end
+			if(debug) { std::cout << "The removed node is at the end" << std::endl; }
+			node->previous->next = NULL;
+			delete node;
+			node = NULL;
+		} else {
+			if(debug) { std::cout << "The removed node is somewhere inside the list" << std::endl; }
+			node->next->previous = node->previous;
+			node->previous->next = node->next;
+  			delete node;
+			node = NULL;
+		}
 	}
 
-	current = NULL;
+	node = NULL;
 
-	if(debug) { printLinkedList(); }
+	list->length--;
+
+	if(debug) { list->display(); }
 
 }
 
-void insertNode(int index, struct node* newNode) {
+//Optimize this?
+void LinkedList::insertNode(int index, struct node* newNode) {
 	
 	if(debug) {
 		std::cout << "inserting node: " << index << std::endl;	
 		std::cout << "new node value: " << newNode->value << " Index: " << index << std::endl;
 	}
 
-	struct node *current = root;
+	struct node *current = list->root;
+	struct node *last;
 
 	int i=0;
 
-	while(current != NULL && i < index-1) { //Get to the right place
+	while(current && i < index) { //Get to the right place
 		i++;
+		last = current;
 		current = current->next;	
 	}
 
 	if(i == 0) {
 		if(debug) { std::cout << "The added node will be at the front" << std::endl; }
-		newNode->next = root; 
-		root = newNode;
+		if(list->root) {
+			newNode->next = list->root; 
+			list->root->previous = newNode;
+			list->root = newNode;
+			newNode->previous = NULL;
+		} else {
+			list->root = newNode;
+		}
 	} else {
 		if(debug) { std::cout << "The added node will be somewhere inside the list" << std::endl; }
-		if(i < listLength) {
-			newNode->next = current->next; //Remove it
-			current->next = newNode;
+		if(i < list->length) { //Not at the end. +1 is there to ensure that it is supposed to be put at the end and not the 2nd to last index
+			if(debug) { std::cout << "Not at the end" << std::endl; }
+			newNode->next = current; //add it
+			current->previous = newNode;
 		} else {
+			if(debug) { std::cout << "At the end" << std::endl;}
 			newNode->next = NULL;
 		}
+		newNode->previous = last;
+		last->next = newNode;
 	}
 
-	if(debug) { printLinkedList(); }
-	listLength++;
+	list->length++;
 
+	if(debug) { list->display(); }
+	
 }
 
+/*
 //I dont think I need this anymore
-int linkedListLength() {
+int LinkedList::length() {
 	
-	struct node *current = root;
+	struct node *current = list->root;
 
 	int len = 0;
 
@@ -419,24 +455,24 @@ int linkedListLength() {
 
 	return len;
 
-}
+}*/
 
-void printLinkedList() {
+void LinkedList::display() {
 
-	struct node *current = root;
+	struct node *current = list->root;
 
-	while(current != NULL) {
+	while(current) {
 		std::cout << current->value << ", ";
 		current = current->next;
 	}
 
-	std::cout << std::endl;
+	std::cout << "LENGTH: " << list->length << std::endl;
 
 }
 
-struct node* jumpTo(int i) {
+struct node* LinkedList::jumpTo(int i) {
 	
-	struct node *current = root;
+	struct node *current = list->root;
 
 	if(debug) { std::cout << "Jumping to index: " << i << std::endl; }
 
@@ -450,7 +486,26 @@ struct node* jumpTo(int i) {
 
 }
 
-void printStep(int begin, int length) {
+//Free the entire list
+void LinkedList::clean() {
+
+	struct node *current = list->root;
+	struct node *temp;
+
+	int i=0;
+	while(current) {
+		temp=current->next;
+  		//delete current; I always get errors here
+		current = temp;
+	}
+
+	list->root = NULL;
+
+	list->length = 0;
+
+}
+
+void printStep(std::string operation, int begin, int length) {
 
 	for(int i=0; i<depth; i++) {
 		std::cout << "  "; //Print out spacing
@@ -458,10 +513,12 @@ void printStep(int begin, int length) {
 
 	std::string output;
 
+	output+=operation;
+
 	//build the equation from the linked list
-	struct node *current = jumpTo(begin);
+	struct node *current = list->jumpTo(begin);
 	int i = 0;
-	while(current != NULL && i <= length) {
+	while(current != NULL && i < length) {
 		if(current->type == 0) {
 			output+=removeZeros(std::to_string(current->value));
 		} else {
@@ -585,39 +642,26 @@ std::string error_call(struct node *current) {
 
 struct node* create_node(int type, int value) {
 
-	struct node *node = (struct node*)malloc(sizeof(struct node));
+	struct node *node = new struct node;
 	node->type = type; //Set its values
 	node->value = value;
 	node->next = NULL;
+	node->previous = NULL;
 	return node;
-
-}
-
-//Free the entire list
-void clean() {
-
-	struct node *current = root;
-
-	while(current) {
-		node* last = current;	
-		current = current->next;
-	}
-
-	root = NULL;
-
-	listLength = 0;
 
 }
 
 //Parse the entire equation into a linked list
 int parse(char *equation) {
 	
+	
 	//Remove all spaces
 	std::string str = equation;
 	str.erase(remove_if(str.begin(), str.end(), ::isspace), str.end());
 
-	clean(); //Reset the thing (Just for convenience for tests)
-	struct node *current = root;
+	depth = 0;
+	list->clean(); //Reset the thing (Just for convenience for tests)
+	struct node *current = list->root;
 
 	//Turn the equation into a linked list
 	for(int i=0; i<str.length(); i++) {
@@ -626,64 +670,72 @@ int parse(char *equation) {
 			struct node *node = create_node(1,6);
 			if(i > 0){	
 				current->next = node;
+				node->previous = current;
 			} else {
-				root = node;
+				list->root = node;
 			}
 			current = node;
 		} else if(c == ')') {
 			struct node *node = create_node(1,7);
 			if(i > 0){	
 				current->next = node;
+				node->previous = current;
 			} else {
-				root = node;
+				list->root = node;
 			}
 			current = node;
 		} else if(c == '|') {
 			struct node *node = create_node(1,8);
 			if(i > 0){	
 				current->next = node;
+				node->previous = current;
 			} else {
-				root = node;
+				list->root = node;
 			}
 			current = node;
 		} else if(c == 'V') {
 			struct node *node = create_node(1,4);
 			if(i > 0){	
 				current->next = node;
+				node->previous = current;
 			} else {
-				root = node;
+				list->root = node;
 			}
 			current = node;
 		} else if(c == '^') {
 			struct node *node = create_node(1,5);
 			if(i > 0){	
 				current->next = node;
+				node->previous = current;
 			} else {
-				root = node;
+				list->root = node;
 			}
 			current = node;
 		} else if(c == '/') {
 			struct node *node = create_node(1,3);
 			if(i > 0){	
 				current->next = node;
+				node->previous = current;
 			} else {
-				root = node;
+				list->root = node;
 			}
 			current = node;	
 		} else if(c == '*') {
 			struct node *node = create_node(1,2);
 			if(i > 0){	
 				current->next = node;
+				node->previous = current;
 			} else {
-				root = node;
+				list->root = node;
 			}
 			current = node;
 		} else if(c == '+') {
 			struct node *node = create_node(1,0);
 			if(i > 0){	
 				current->next = node;
+				node->previous = current;
 			} else {
-				root = node;
+				list->root = node;
 			}
 			current = node;	
 		} else if(c == '-') {
@@ -695,16 +747,18 @@ int parse(char *equation) {
 				struct node *node = create_node(1,1);
 				if(i > 0){	
 					current->next = node;
+					node->previous = current;
 				} else {
-					root = node;
+					list->root = node;
 				}
 				current = node;	
 			} else { //This is a number
 				struct node *node = create_node(0, getNumberAsNumber(str, i));
 				if(i > 0){	
 					current->next = node;
+					node->previous = current;
 				} else {
-					root = node;
+					list->root = node;
 				}
 				current = node;
 				i+=lastNumberGottenLength-1;
@@ -713,26 +767,27 @@ int parse(char *equation) {
 			struct node *node = create_node(0, getNumberAsNumber(str, i));
 			if(i > 0){	
 				current->next = node;
+				node->previous = current;
 			} else {
-				root = node;
+				list->root = node;
 			}
 			current = node;
 			i+=lastNumberGottenLength-1;
 		}
 
-		listLength++;
+		list->length++;
 
 	}
 
-	if(debug) { std::cout << "New parsed equation: "; printLinkedList(); std::cout << std::endl; }
+	if(debug) { std::cout << "New parsed equation: "; list->display(); std::cout << std::endl; }
 
-	if(!disableSyntaxCheck) { return listLength; } //All there is left to do here is syntax checking
+	if(disableSyntaxCheck) { return list->length; } //All there is left to do here is syntax checking
 
 	//Check for syntax errors
 	bool inAbsoluteValue = false;
 	int parenthesisDepth = 0;
 	bool error = false;
-	current = root;
+	current = list->root;
 	int i = 0;
 	while(current != NULL) {
 		int type = current->type;
@@ -827,6 +882,6 @@ int parse(char *equation) {
 
 	if(error) { exit(-2); } //Exit if there was one
 
-	return listLength;
+	return list->length;
 
 }

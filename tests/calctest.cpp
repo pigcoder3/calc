@@ -16,13 +16,13 @@ int testSize = 20;
 //We shouldnt need more than 20 parts
 void parseCheck(int values[testSize], int size) {
 
-	struct node *current = root;
+	struct node *current = list->root;
 
-	EXPECT_EQ(listLength, size) << printLinkedList(); //The things should be the same size
+	EXPECT_EQ(list->length, size); //The things should be the same size
 
 	int i = 0;
 	while(current != NULL && i <= size+1) {
-		EXPECT_EQ(values[i], current->value) << printLinkedList();
+		EXPECT_EQ(values[i], current->value);
 		current = current->next;
 		i++;
 	}
@@ -48,7 +48,7 @@ TEST(Parse, addition) {
 	parseCheck(listValues, sizeof(listValues)/sizeof(int));
 
 	//Teardown
-	clean();
+	list->clean();
 }
 
 TEST(Parse, subtraction) {
@@ -63,7 +63,7 @@ TEST(Parse, subtraction) {
 	parseCheck(listValues, sizeof(listValues)/sizeof(int));
 
 	//Teardown
-	clean();
+	list->clean();
 }
 
 TEST(Parse, multiplication) {
@@ -78,7 +78,7 @@ TEST(Parse, multiplication) {
 	parseCheck(listValues, sizeof(listValues)/sizeof(int));
 
 	//Teardown
-	clean();
+	list->clean();
 }
 
 TEST(Parse, division) {
@@ -93,7 +93,7 @@ TEST(Parse, division) {
 	parseCheck(listValues, sizeof(listValues)/sizeof(int));
 
 	//Teardown
-	clean();
+	list->clean();
 }
 
 TEST(Parse, doubleNegative) {
@@ -108,7 +108,7 @@ TEST(Parse, doubleNegative) {
 	parseCheck(listValues, sizeof(listValues)/sizeof(int));
 
 	//Teardown
-	clean();
+	list->clean();
 }
 
 /* Test Suite: Calculate
@@ -120,7 +120,7 @@ TEST(Parse, doubleNegative) {
  *	 - Multiplication
  *	 - Division
  *   - Exponents
- *   - Roots
+ *   - list->roots
  *   - Absolute value
  *   - Parenthesis
 */
@@ -136,10 +136,10 @@ TEST(Calculate, addition) {
 
 	//Testing
 	calculate(NULL, 0, equationSize, false);
-	ASSERT_EQ(expected, root->value);
+	ASSERT_EQ(expected, list->root->value);
 
 	//Teardown
-	clean();
+	list->clean();
 	
 }
 
@@ -154,10 +154,10 @@ TEST(Calculate, subtraction) {
 
 	//Testing
 	calculate(NULL, 0, equationSize, false);
-	ASSERT_EQ(expected, root->value);
+	ASSERT_EQ(expected, list->root->value);
 
 	//Teardown
-	clean();
+	list->clean();
 	
 }
 
@@ -172,10 +172,10 @@ TEST(Calculate, subtractNegative) {
 
 	//Testing
 	calculate(NULL, 0, equationSize, false);
-	ASSERT_EQ(expected, root->value);
+	ASSERT_EQ(expected, list->root->value);
 
 	//Teardown
-	clean();
+	list->clean();
 	
 }
 
@@ -190,10 +190,10 @@ TEST(Calculate, multiplication) {
 
 	//Testing
 	calculate(NULL, 0, equationSize, false);
-	ASSERT_EQ(expected, root->value);
+	ASSERT_EQ(expected, list->root->value);
 
 	//Teardown
-	clean();
+	list->clean();
 
 }
 
@@ -208,10 +208,10 @@ TEST(Calculate, division) {
 
 	//Testing
 	calculate(NULL, 0, equationSize, false);
-	ASSERT_EQ(expected, root->value);
+	ASSERT_EQ(expected, list->root->value);
 
 	//Teardown
-	clean();
+	list->clean();
 
 }
 
@@ -226,10 +226,10 @@ TEST(Calculate, exponent) {
 
 	//Testing
 	calculate(NULL, 0, equationSize, false);
-	ASSERT_EQ(expected, root->value);
+	ASSERT_EQ(expected, list->root->value);
 
 	//Teardown
-	clean();
+	list->clean();
 
 }
 
@@ -244,10 +244,10 @@ TEST(Calculate, root) {
 
 	//Testing
 	calculate(NULL, 0, equationSize, false);
-	ASSERT_EQ(expected, root->value);
+	ASSERT_EQ(expected, list->root->value);
 
 	//Teardown
-	clean();
+	list->clean();
 
 }
 
@@ -262,10 +262,10 @@ TEST(Calculate, parenthesis) {
 
 	//Testing
 	calculate(NULL, 0, equationSize, false);
-	ASSERT_EQ(expected, root->value);
+	ASSERT_EQ(expected, list->root->value);
 
 	//Teardown
-	clean();
+	list->clean();
 
 }
 
@@ -280,9 +280,9 @@ TEST(Calculate, nestedParenthesis) {
 
 	//Testing
 	calculate(NULL, 0, equationSize, false);
-	ASSERT_EQ(expected, root->value);
+	ASSERT_EQ(expected, list->root->value);
 
 	//Teardown
-	clean();
+	list->clean();
 
 }
