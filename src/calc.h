@@ -114,7 +114,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 
 long double getNumberAsNumber(std::string input, int index);
 
-struct node* create_node(int type, int value);
+struct node* create_node(int type, long double value);
 
 std::string error_call(struct node *current);
 

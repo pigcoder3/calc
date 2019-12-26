@@ -11,10 +11,9 @@
 
 bool disableSyntaxChecks = true; //We wont need this here because I know the syntax is correct
 
-int testSize = 20;
+//int testSize = 20;
 
-//We shouldnt need more than 20 parts
-void parseCheck(int values[testSize], int size) {
+void parseCheck(long double values[], int size) {
 
 	struct node *current = list->root;
 
@@ -40,12 +39,12 @@ TEST(Parse, addition) {
 
 	//Setup
 	char *equation = (char*)("4+5");
-	int listValues[] = {4, 0, 5};
+	long double listValues[] = {4, 0, 5};
 
 	parse(equation); //The equation is stored in the linked list
 
 	//Testing
-	parseCheck(listValues, sizeof(listValues)/sizeof(int));
+	parseCheck(listValues, sizeof(listValues)/sizeof(long double));
 
 	//Teardown
 	list->clean();
@@ -55,12 +54,12 @@ TEST(Parse, subtraction) {
 
 	//Setup
 	char *equation = (char*)("4-5");
-	int listValues[] = {4, 1, 5};
+	long double listValues[] = {4, 1, 5};
 	
 	parse(equation); //The equation is stored in the linked list
 
 	//Testing
-	parseCheck(listValues, sizeof(listValues)/sizeof(int));
+	parseCheck(listValues, sizeof(listValues)/sizeof(long double));
 
 	//Teardown
 	list->clean();
@@ -70,12 +69,12 @@ TEST(Parse, multiplication) {
 
 	//Setup
 	char *equation = (char*)("4*5");
-	int listValues[] = {4, 2, 5};
+	long double listValues[] = {4, 2, 5};
 
 	parse(equation); //The equation is stored in the linked list
 
 	//Testing
-	parseCheck(listValues, sizeof(listValues)/sizeof(int));
+	parseCheck(listValues, sizeof(listValues)/sizeof(long double));
 
 	//Teardown
 	list->clean();
@@ -85,12 +84,12 @@ TEST(Parse, division) {
 
 	//Setup
 	char *equation = (char*)("4/5");
-	int listValues[] = {4, 3, 5};
+	long double listValues[] = {4, 3, 5};
 	
 	parse(equation); //The equation is stored in the linked list
 
 	//Testing
-	parseCheck(listValues, sizeof(listValues)/sizeof(int));
+	parseCheck(listValues, sizeof(listValues)/sizeof(long double));
 
 	//Teardown
 	list->clean();
@@ -100,12 +99,72 @@ TEST(Parse, doubleNegative) {
 
 	//Setup
 	char *equation = (char*)("4--5");
-	int listValues[] = {4, 1, -5};
+	long double listValues[] = {4, 1, -5};
 
 	parse(equation); //The equation is stored in the linked list
 
 	//Testing
-	parseCheck(listValues, sizeof(listValues)/sizeof(int));
+	parseCheck(listValues, sizeof(listValues)/sizeof(long double));
+
+	//Teardown
+	list->clean();
+}
+
+TEST(Parse, bareDecimal) {
+
+	//Setup
+	char *equation = (char*)("4*.5");
+	long double listValues[] = {4, 2, 0.5};
+
+	parse(equation); //The equation is stored in the linked list
+
+	//Testing
+	parseCheck(listValues, sizeof(listValues)/sizeof(long double));
+
+	//Teardown
+	list->clean();
+}
+
+TEST(Parse, negativeBareDecimal) {
+
+	//Setup
+	char *equation = (char*)("4*-.5");
+	long double listValues[] = {4, 2, -0.5};
+
+	parse(equation); //The equation is stored in the linked list
+
+	//Testing
+	parseCheck(listValues, sizeof(listValues)/sizeof(long double));
+
+	//Teardown
+	list->clean();
+}
+
+TEST(Parse, negativeDecimal) {
+
+	//Setup
+	char *equation = (char*)("4+-.5");
+	long double listValues[] = {4, 0, -0.5};
+
+	parse(equation); //The equation is stored in the linked list
+
+	//Testing
+	parseCheck(listValues, sizeof(listValues)/sizeof(long double));
+
+	//Teardown
+	list->clean();
+}
+
+TEST(Parse, nonBareDecimal) {
+
+	//Setup
+	char *equation = (char*)("4+0.5");
+	long double listValues[] = {4, 0, 0.5};
+
+	parse(equation); //The equation is stored in the linked list
+
+	//Testing
+	parseCheck(listValues, sizeof(listValues)/sizeof(long double));
 
 	//Teardown
 	list->clean();
@@ -120,7 +179,7 @@ TEST(Parse, doubleNegative) {
  *	 - Multiplication
  *	 - Division
  *   - Exponents
- *   - list->roots
+ *   - Roots
  *   - Absolute value
  *   - Parenthesis
 */
