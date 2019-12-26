@@ -48,7 +48,7 @@ compile: clean
 	$(COMPILER) $(SRCFILES) -o $(OUTPUTFILE) $(SRCLIBS) $(SRCOPTIONS)
 	#Done compiling
 
-test:
+test: clean
 	#Create needed directories
 	mkdir $(TESTOUTDIR)
 	#Compile (I need to compile the sources with the tests)

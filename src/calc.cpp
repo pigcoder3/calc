@@ -419,10 +419,11 @@ void LinkedList::insertNode(int index, struct node* newNode) {
 			newNode->previous = NULL;
 		} else {
 			list->root = newNode;
+			newNode->next = NULL;
 		}
 	} else {
 		if(debug) { std::cout << "The added node will be somewhere inside the list" << std::endl; }
-		if(i < list->length) { //Not at the end. +1 is there to ensure that it is supposed to be put at the end and not the 2nd to last index
+		if(i < list->length) { 
 			if(debug) { std::cout << "Not at the end" << std::endl; }
 			newNode->next = current; //add it
 			current->previous = newNode;
@@ -435,6 +436,8 @@ void LinkedList::insertNode(int index, struct node* newNode) {
 	}
 
 	list->length++;
+
+	std::cout << "Added node" << std::endl;
 
 	if(debug) { list->display(); }
 	
@@ -462,7 +465,8 @@ void LinkedList::display() {
 	struct node *current = list->root;
 
 	while(current) {
-		std::cout << current->value << ", ";
+		std::cout << "bruh" << std::endl;
+		std::cout << current->value << ", " << std::endl;
 		current = current->next;
 	}
 
