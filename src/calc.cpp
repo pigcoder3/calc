@@ -1,3 +1,33 @@
+/*
+
+	Calc - A free command line calculator
+
+	Calc.cpp
+
+
+	MIT License
+
+	Copyright (c) 2019 Sean Johnson
+
+	Permission is hereby granted, free of charge, to any person obtaining a copy
+	of this software and associated documentation files (the "Software"), to deal
+	in the Software without restriction, including without limitation the rights
+	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+	copies of the Software, and to permit persons to whom the Software is
+	furnished to do so, subject to the following conditions:
+
+	The above copyright notice and this permission notice shall be included in all
+	copies or substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+	SOFTWARE.
+*/
+
 #include <cstring>
 #include <iostream>
 #include <algorithm>
@@ -7,7 +37,7 @@
 
 bool showSteps = false;
 bool sciNotation = false;
-bool debug = false;
+bool debug = true;
 bool disableSyntaxCheck = false;
 int depth = 0;
 
@@ -419,11 +449,10 @@ void LinkedList::insertNode(int index, struct node* newNode) {
 			newNode->previous = NULL;
 		} else {
 			list->root = newNode;
-			newNode->next = NULL;
 		}
 	} else {
 		if(debug) { std::cout << "The added node will be somewhere inside the list" << std::endl; }
-		if(i < list->length) { 
+		if(i < list->length) { //Not at the end. +1 is there to ensure that it is supposed to be put at the end and not the 2nd to last index
 			if(debug) { std::cout << "Not at the end" << std::endl; }
 			newNode->next = current; //add it
 			current->previous = newNode;
@@ -436,8 +465,6 @@ void LinkedList::insertNode(int index, struct node* newNode) {
 	}
 
 	list->length++;
-
-	std::cout << "Added node" << std::endl;
 
 	if(debug) { list->display(); }
 	
@@ -465,8 +492,7 @@ void LinkedList::display() {
 	struct node *current = list->root;
 
 	while(current) {
-		std::cout << "bruh" << std::endl;
-		std::cout << current->value << ", " << std::endl;
+		std::cout << current->value << ", ";
 		current = current->next;
 	}
 
