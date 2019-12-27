@@ -61,8 +61,8 @@ run: $(OUTPUTFILE)
 	./$(OUTPUTFILE)
 
 .PHONY: install
-install: compile
-	cp $(OUTPUTFILE) /usr/local/bin/calc	
+install: $(OUTPUTFILE)
+	cp $(OUTPUTFILE) /usr/local/bin/$(PROJECT)
 
 .PHONY: clean
 clean:
