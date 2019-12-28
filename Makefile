@@ -56,17 +56,18 @@ TESTOBJDIR = ./tests/out/obj
 TESTOBJECTSWITHCORRECTSUFFIX = $(subst .cpp,.o,$(TESTSRCFILES)) #Figure out how to change prefix and suffix
 TESTOBJECTS = $(subst $(TESTDIR),$(TESTOBJDIR),$(TESTOBJECTSWITHCORRECTSUFFIX))
 
-#.PHONY: compile
+.PHONY: compile
 compile: $(OUTPUTFILE)
 
-#.PHONY: all
+.PHONY: all
 all: $(OUTPUTFILE) test
 
 $(OUTPUTFILE): $(SRCBIN) $(OBJECTS)
 	#Linking	
 	$(COMPILER) $(OBJECTS) -o $(OUTPUTFILE) $(SRCLIBS) $(SRCOPTIONS)
 
-$(OBJDIR)/%.o: $(SRCDIR)/%.cpp $(SRCBIN) $(OBJDIR)
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp
+	$(MKDIR) $(SRCBIN) $(OBJDIR) #Cannot make this a dependency because it says it has been changed when a file within it has
 	#Create object	
 	$(COMPILER) -c $< -o $@ $(SRCLIBS) $(SRCOPTIONS)
 
