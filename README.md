@@ -14,9 +14,6 @@ Calc is a simple command line calculator.
 git clone https://github.com/pigcoder3/calc.git
 cd calc
 make
+make install
 ```
-
-### Windows
-
-1. Install [Cygwin](https://www.cygwin.com/)
-2. Use the linux/macos installation commands in a Cygwin terminal
+If anything is messed up in the process: `make clean`
