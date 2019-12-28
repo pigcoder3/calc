@@ -230,6 +230,7 @@ TEST(Calculate, subtractNegative) {
 	parse(equation); //The equation is stored in the linked list
 
 	//Testing
+
 	calculate(NULL, 0, equationSize, false);
 	ASSERT_EQ(expected, list->root->value);
 

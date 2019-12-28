@@ -395,7 +395,8 @@ void LinkedList::removeNode(struct node *node) {
 			list->root->previous = NULL;
 		} else { //This is the only thing in the list
 			delete list->root;
-			list->root = NULL;
+			list->root = new struct node; //Create a new root so that this can still be used
+
 		}
 	} else {
 		
@@ -448,6 +449,7 @@ void LinkedList::insertNode(int index, struct node* newNode) {
 			list->root = newNode;
 			newNode->previous = NULL;
 		} else {
+			std::cout << "BRUH" << std::endl;
 			list->root = newNode;
 		}
 	} else {

@@ -28,6 +28,10 @@ INCLUDEDIR = ./include
 SRCBIN = ./bin
 OUTPUTFILE = $(SRCBIN)/$(PROJECT)
 
+#commands
+MKDIR = mkdir -p
+RM = rm -rf
+
 #sources
 SRCDIR = ./src
 SRCFILES = $(shell find $(SRCDIR) -name "*.cpp")
@@ -49,13 +53,13 @@ OBJECTSWITHCORRECTSUFFIX = $(subst .cpp,.o,$(SRCFILES)) #Figure out how to chang
 OBJECTS = $(subst $(SRCDIR),$(OBJDIR),$(OBJECTSWITHCORRECTSUFFIX))
 
 TESTOBJDIR = ./tests/out/obj
-TESTOBJECTSWITHCORRECTSUFFIX = $(subst .cpp,.o,$(SRCFILES)) #Figure out how to change prefix and suffix
-TESTOBJECTS = $(subst $(SRCDIR),$(OBJDIR),$(OBJECTSWITHCORRECTSUFFIX))
+TESTOBJECTSWITHCORRECTSUFFIX = $(subst .cpp,.o,$(TESTSRCFILES)) #Figure out how to change prefix and suffix
+TESTOBJECTS = $(subst $(TESTDIR),$(TESTOBJDIR),$(TESTOBJECTSWITHCORRECTSUFFIX))
 
-.PHONY: compile
+#.PHONY: compile
 compile: $(OUTPUTFILE)
 
-.PHONY: all
+#.PHONY: all
 all: $(OUTPUTFILE) test
 
 $(OUTPUTFILE): $(SRCBIN) $(OBJECTS)
@@ -81,16 +85,16 @@ $(TESTOBJDIR)/%.o: $(TESTDIR)/%.cpp
 
 #Generated project structure directories	
 $(SRCBIN):
-	mkdir $(SRCBIN)
+	$(MKDIR) $(SRCBIN)
 
 $(OBJDIR): $(SRCBIN)
-	mkdir $(OBJDIR)
+	$(MKDIR) $(OBJDIR)
 
 $(TESTOUTDIR):
-	mkdir $(TESTOUTDIR)
+	$(MKDIR) $(TESTOUTDIR)
 
-$(TESTOBJDIR): $(TESTOUTDIR)
-	mkdir $(TESTOBJDIR)
+$(TESTOBJDIR):
+	$(MKDIR) $(TESTOBJDIR)
 
 .PHONY: install #You're gonna have to change this one to your needs
 install: $(OUTPUTFILE)
@@ -98,5 +102,7 @@ install: $(OUTPUTFILE)
 
 .PHONY: clean
 clean:
-	rm -rf $(SRCBIN)
-	rm -rf $(TESTOUTDIR)
+	$(RM) $(SRCBIN)
+	$(RM) $(TESTOUTDIR)
+
+.PRECIOUS: $(TESTOBJDIR)/%.o #make sure make does not randomly remove these at the end

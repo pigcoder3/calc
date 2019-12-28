@@ -16,3 +16,4 @@ cd calc
 make
 make install
 ```
+If anything is messed up in the process: `make clean`
