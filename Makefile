@@ -12,9 +12,12 @@
 # - root
 #   - Makefile
 #   - bin/ (Output files, Generated)
+#     - obj/
 #   - include/ (Libraries)
 #   - src/ (Project sources)
 #   - tests/ (Project tests, I hope you are using these)
+#     - out (Generated)
+#       - obj (Generated)
 
 #universal
 MAINFILE = main.cpp #needed so it is not compiled with everything else during the tests
@@ -49,9 +52,11 @@ TESTOBJDIR = ./tests/out/obj
 TESTOBJECTSWITHCORRECTSUFFIX = $(subst .cpp,.o,$(SRCFILES)) #Figure out how to change prefix and suffix
 TESTOBJECTS = $(subst $(SRCDIR),$(OBJDIR),$(OBJECTSWITHCORRECTSUFFIX))
 
-all: $(OUTPUTFILE) test
-
+.PHONY: compile
 compile: $(OUTPUTFILE)
+
+.PHONY: all
+all: $(OUTPUTFILE) test
 
 $(OUTPUTFILE): $(SRCBIN) $(OBJECTS)
 	#Linking	
