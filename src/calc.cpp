@@ -37,7 +37,7 @@
 
 bool showSteps = false;
 bool sciNotation = false;
-bool debug = true;
+bool debug = false;
 bool disableSyntaxCheck = false;
 int depth = 0;
 
@@ -449,7 +449,6 @@ void LinkedList::insertNode(int index, struct node* newNode) {
 			newNode->previous = NULL;
 		} else {
 			list->root = newNode;
-			newNode->next = NULL;
 		}
 	} else {
 		if(debug) { std::cout << "The added node will be somewhere inside the list" << std::endl; }
@@ -568,9 +567,7 @@ long double getNumberAsNumber(std::string input, int index) {
 
 	//Add each digit/decimal point to the new string
 	for(int i=index; i<input.length(); i++) {
-		//std::cout << input[i] << std::endl;
 		if((isdigit(input[i]) || (input[i] == '-' && number.length() == 0)) || (input[i] == '.')) { //The negative sign would be at the front of the number so we are ok
-			
 			number+=input[i];
 		} else {
 			//The number has ended
@@ -578,13 +575,11 @@ long double getNumberAsNumber(std::string input, int index) {
 		}
 	}
 
-	std::cout << number << std::endl;
-
 	lastNumberGottenLength = number.length();
 
 	//Convert the string to long double and return it
 	try {
-		return stold(number);
+		return stod(number);
 	} catch (std::invalid_argument) {
 		std::cout << "Error: Invalid number. (Unkown origin)" << std::endl;
 		exit(-1);

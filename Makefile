@@ -33,34 +33,61 @@ SRCOPTIONS = -std=c++11
 
 #tests
 TESTDIR = ./tests
-TESTSRCFILES = $(shell find $(TESTDIR) $(SRCDIR) -name "*.cpp" -not -name $(MAINFILE))
+TESTSRCFILES = $(shell find $(TESTDIR) -name "*.cpp")
 TESTLIBS = -lgtest -lgtest_main
 TESTOUTDIR = ./tests/out
-TESTOUTFILE = $(TESTOUTDIR)/test
+TESTSWITHCORRECTSUFFIX = $(subst .cpp,.test,$(TESTSRCFILES)) #Figure out how to change prefix and suffix
+TESTOUTFILES = $(subst $(TESTDIR),$(TESTOUTDIR),$(TESTSWITHCORRECTSUFFIX))
 TESTOPTIONS = -std=c++11
 
-all: clean compile test
+#objects
+OBJDIR = ./bin/obj
+OBJECTSWITHCORRECTSUFFIX = $(subst .cpp,.o,$(SRCFILES)) #Figure out how to change prefix and suffix
+OBJECTS = $(subst $(SRCDIR),$(OBJDIR),$(OBJECTSWITHCORRECTSUFFIX))
 
-compile: clean
-	#Create needed directories
+TESTOBJDIR = ./tests/out/obj
+TESTOBJECTSWITHCORRECTSUFFIX = $(subst .cpp,.o,$(SRCFILES)) #Figure out how to change prefix and suffix
+TESTOBJECTS = $(subst $(SRCDIR),$(OBJDIR),$(OBJECTSWITHCORRECTSUFFIX))
+
+all: $(OUTPUTFILE) test
+
+compile: $(OUTPUTFILE)
+
+$(OUTPUTFILE): $(SRCBIN) $(OBJECTS)
+	#Linking	
+	$(COMPILER) $(OBJECTS) -o $(OUTPUTFILE) $(SRCLIBS) $(SRCOPTIONS)
+
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp $(SRCBIN) $(OBJDIR)
+	#Create object	
+	$(COMPILER) -c $< -o $@ $(SRCLIBS) $(SRCOPTIONS)
+
+
+test: $(TESTOUTDIR) $(TESTOBJDIR) $(TESTOBJECTS) $(TESTOUTFILES)
+
+$(TESTOUTDIR)/%.test: $(TESTOBJDIR)/%.o $(OBJDIR)/%.o
+	#Link the objects
+	$(COMPILER) $^ -o $@ $(TESTLIBS) $(TESTOPTIONS)
+	#Run the new executable
+	./$@
+
+$(TESTOBJDIR)/%.o: $(TESTDIR)/%.cpp
+	#Compile the test (Create its object file) with its respective object file
+	$(COMPILER) -c $< -o $@ $(TESTOPTIONS)
+
+#Generated project structure directories	
+$(SRCBIN):
 	mkdir $(SRCBIN)
-	#Compile it
-	$(COMPILER) $(SRCFILES) -o $(OUTPUTFILE) $(SRCLIBS) $(SRCOPTIONS)
-	#Done compiling
 
-test: clean
-	#Create needed directories
+$(OBJDIR): $(SRCBIN)
+	mkdir $(OBJDIR)
+
+$(TESTOUTDIR):
 	mkdir $(TESTOUTDIR)
-	#Compile (I need to compile the sources with the tests)
-	$(COMPILER) $(TESTSRCFILES) -o $(TESTOUTFILE) $(TESTLIBS) $(TESTOPTIONS)
 
-	#Run
-	./$(TESTOUTFILE)
+$(TESTOBJDIR): $(TESTOUTDIR)
+	mkdir $(TESTOBJDIR)
 
-run: $(OUTPUTFILE)
-	./$(OUTPUTFILE)
-
-.PHONY: install
+.PHONY: install #You're gonna have to change this one to your needs
 install: $(OUTPUTFILE)
 	cp $(OUTPUTFILE) /usr/local/bin/$(PROJECT)
 
