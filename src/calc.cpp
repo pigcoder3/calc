@@ -37,7 +37,7 @@
 
 bool showSteps = false;
 bool sciNotation = false;
-bool debug = true;
+bool debug = false;
 bool disableSyntaxCheck = false;
 int depth = 0;
 
@@ -395,7 +395,8 @@ void LinkedList::removeNode(struct node *node) {
 			list->root->previous = NULL;
 		} else { //This is the only thing in the list
 			delete list->root;
-			list->root = NULL;
+			list->root = new struct node; //Create a new root so that this can still be used
+
 		}
 	} else {
 		
@@ -448,6 +449,7 @@ void LinkedList::insertNode(int index, struct node* newNode) {
 			list->root = newNode;
 			newNode->previous = NULL;
 		} else {
+			std::cout << "BRUH" << std::endl;
 			list->root = newNode;
 		}
 	} else {
@@ -525,7 +527,7 @@ void LinkedList::clean() {
 	int i=0;
 	while(current) {
 		temp=current->next;
-  		//delete current; I always get errors here
+  		delete current; //I always get errors here (Used to?)
 		current = temp;
 	}
 
@@ -670,7 +672,7 @@ std::string error_call(struct node *current) {
 	return output;
 }
 
-struct node* create_node(int type, int value) {
+struct node* create_node(int type, long double value) {
 
 	struct node *node = new struct node;
 	node->type = type; //Set its values

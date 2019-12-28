@@ -13,6 +13,7 @@ Calc is a simple command line calculator.
 ```
 git clone https://github.com/pigcoder3/calc.git
 cd calc
-make compile
+make
 make install
 ```
+If anything is messed up in the process: `make clean`

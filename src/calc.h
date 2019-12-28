@@ -49,11 +49,11 @@ private:
 
 public:
 
-	int length = 0;
+	int length;
 
 	struct node *root;
 
-	LinkedList() { root = new node; }
+	LinkedList() { length = 0; root = new node; }
 	~LinkedList() { clean(); }
 
 	//Replaces a list of nodes within an array with another list of nodes
@@ -114,7 +114,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 
 long double getNumberAsNumber(std::string input, int index);
 
-struct node* create_node(int type, int value);
+struct node* create_node(int type, long double value);
 
 std::string error_call(struct node *current);
 

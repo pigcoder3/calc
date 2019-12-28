@@ -12,9 +12,12 @@
 # - root
 #   - Makefile
 #   - bin/ (Output files, Generated)
+#     - obj/
 #   - include/ (Libraries)
 #   - src/ (Project sources)
 #   - tests/ (Project tests, I hope you are using these)
+#     - out (Generated)
+#       - obj (Generated)
 
 #universal
 MAINFILE = main.cpp #needed so it is not compiled with everything else during the tests
@@ -25,6 +28,10 @@ INCLUDEDIR = ./include
 SRCBIN = ./bin
 OUTPUTFILE = $(SRCBIN)/$(PROJECT)
 
+#commands
+MKDIR = mkdir -p
+RM = rm -rf
+
 #sources
 SRCDIR = ./src
 SRCFILES = $(shell find $(SRCDIR) -name "*.cpp")
@@ -33,38 +40,70 @@ SRCOPTIONS = -std=c++11
 
 #tests
 TESTDIR = ./tests
-TESTSRCFILES = $(shell find $(TESTDIR) $(SRCDIR) -name "*.cpp" -not -name $(MAINFILE))
+TESTSRCFILES = $(shell find $(TESTDIR) -name "*.cpp")
 TESTLIBS = -lgtest -lgtest_main
 TESTOUTDIR = ./tests/out
-TESTOUTFILE = $(TESTOUTDIR)/test
+TESTSWITHCORRECTSUFFIX = $(subst .cpp,.test,$(TESTSRCFILES)) #Figure out how to change prefix and suffix
+TESTOUTFILES = $(subst $(TESTDIR),$(TESTOUTDIR),$(TESTSWITHCORRECTSUFFIX))
 TESTOPTIONS = -std=c++11
 
-all: clean compile test
+#objects
+OBJDIR = ./bin/obj
+OBJECTSWITHCORRECTSUFFIX = $(subst .cpp,.o,$(SRCFILES)) #Figure out how to change prefix and suffix
+OBJECTS = $(subst $(SRCDIR),$(OBJDIR),$(OBJECTSWITHCORRECTSUFFIX))
 
-compile: clean
-	#Create needed directories
-	mkdir $(SRCBIN)
-	#Compile it
-	$(COMPILER) $(SRCFILES) -o $(OUTPUTFILE) $(SRCLIBS) $(SRCOPTIONS)
-	#Done compiling
+TESTOBJDIR = ./tests/out/obj
+TESTOBJECTSWITHCORRECTSUFFIX = $(subst .cpp,.o,$(TESTSRCFILES)) #Figure out how to change prefix and suffix
+TESTOBJECTS = $(subst $(TESTDIR),$(TESTOBJDIR),$(TESTOBJECTSWITHCORRECTSUFFIX))
 
-test: clean
-	#Create needed directories
-	mkdir $(TESTOUTDIR)
-	#Compile (I need to compile the sources with the tests)
-	$(COMPILER) $(TESTSRCFILES) -o $(TESTOUTFILE) $(TESTLIBS) $(TESTOPTIONS)
+.PHONY: compile
+compile: $(OUTPUTFILE)
 
-	#Run
-	./$(TESTOUTFILE)
+.PHONY: all
+all: $(OUTPUTFILE) test
 
-run: $(OUTPUTFILE)
-	./$(OUTPUTFILE)
+$(OUTPUTFILE): $(SRCBIN) $(OBJECTS)
+	#Linking	
+	$(COMPILER) $(OBJECTS) -o $(OUTPUTFILE) $(SRCLIBS) $(SRCOPTIONS)
 
-.PHONY: install
-install: compile
-	cp $(OUTPUTFILE) /usr/local/bin/calc	
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp
+	$(MKDIR) $(SRCBIN) $(OBJDIR) #Cannot make this a dependency because it says it has been changed when a file within it has
+	#Create object	
+	$(COMPILER) -c $< -o $@ $(SRCLIBS) $(SRCOPTIONS)
+
+
+test: $(TESTOUTDIR) $(TESTOBJDIR) $(TESTOBJECTS) $(TESTOUTFILES)
+
+$(TESTOUTDIR)/%.test: $(TESTOBJDIR)/%.o $(OBJDIR)/%.o
+	#Link the objects
+	$(COMPILER) $^ -o $@ $(TESTLIBS) $(TESTOPTIONS)
+	#Run the new executable
+	./$@
+
+$(TESTOBJDIR)/%.o: $(TESTDIR)/%.cpp
+	#Compile the test (Create its object file) with its respective object file
+	$(COMPILER) -c $< -o $@ $(TESTOPTIONS)
+
+#Generated project structure directories	
+$(SRCBIN):
+	$(MKDIR) $(SRCBIN)
+
+$(OBJDIR): $(SRCBIN)
+	$(MKDIR) $(OBJDIR)
+
+$(TESTOUTDIR):
+	$(MKDIR) $(TESTOUTDIR)
+
+$(TESTOBJDIR):
+	$(MKDIR) $(TESTOBJDIR)
+
+.PHONY: install #You're gonna have to change this one to your needs
+install: $(OUTPUTFILE)
+	cp $(OUTPUTFILE) /usr/local/bin/$(PROJECT)
 
 .PHONY: clean
 clean:
-	rm -rf $(SRCBIN)
-	rm -rf $(TESTOUTDIR)
+	$(RM) $(SRCBIN)
+	$(RM) $(TESTOUTDIR)
+
+.PRECIOUS: $(TESTOBJDIR)/%.o #make sure make does not randomly remove these at the end
