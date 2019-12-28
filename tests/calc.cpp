@@ -170,6 +170,21 @@ TEST(Parse, nonBareDecimal) {
 	list->clean();
 }
 
+TEST(Parse, distributiveProperty) {
+
+	//Setup
+	char *equation = (char*)("4*5(3+2)");
+	long double listValues[] = {4, 2, 5, 2, 6, 3, 0, 2, 7};
+
+	parse(equation); //The equation is stored in the linked list
+
+	//Testing
+	parseCheck(listValues, sizeof(listValues)/sizeof(long double));
+
+	//Teardown
+	list->clean();
+}
+
 /* Test Suite: Calculate
  *
  *	Test to ensure each of the following
@@ -335,6 +350,24 @@ TEST(Calculate, nestedParenthesis) {
 	char *equation = (char*)("4*(4+4*(4+4))");
 	int equationSize = 13; //Note that this needs to the be size when it is in the linked list
 	long double expected = 144;
+
+	parse(equation); //The equation is stored in the linked list
+
+	//Testing
+	calculate(NULL, 0, equationSize, false);
+	ASSERT_EQ(expected, list->root->value);
+
+	//Teardown
+	list->clean();
+
+}
+
+TEST(Calculate, distributiveProperty) {
+
+	//Setup
+	char *equation = (char*)("4*5(3+2)");
+	int equationSize = 9; //Note that this needs to the be size when it is in the linked list
+	long double expected = 100;
 
 	parse(equation); //The equation is stored in the linked list
 
