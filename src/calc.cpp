@@ -527,7 +527,7 @@ void LinkedList::clean() {
 	int i=0;
 	while(current) {
 		temp=current->next;
-  		//delete current; I always get errors here
+  		delete current; //I always get errors here (Used to?)
 		current = temp;
 	}
 
