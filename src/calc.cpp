@@ -796,6 +796,16 @@ int parse(char *equation) {
 				}
 				current = node;
 				i+=lastNumberGottenLength-1;
+
+				//Allow for the a following parenthesis (Distributive property)
+				if(i != str.length()-1 && str[i+1] == '(') { //Just insert a multiplication symbol in there (It works the same way)
+					struct node *node = create_node(1, 2);
+					//Note that we already know that this is not the root of the list
+					current->next = node;
+					node->previous = current;
+					current = node;
+					list->length++;
+				}
 			}
 		} else if(isdigit(str[i]) || str[i] == '.') { //This is a number
 			struct node *node = create_node(0, getNumberAsNumber(str, i));
@@ -807,6 +817,16 @@ int parse(char *equation) {
 			}
 			current = node;
 			i+=lastNumberGottenLength-1;
+
+			//Allow for the a following parenthesis (Distributive property)
+			if(i != str.length()-1 && str[i+1] == '(') { //Just insert a multiplication symbol in there (It works the same way)
+				struct node *node = create_node(1, 2);
+				//Note that we already know that this is not the root of the list
+				current->next = node;
+				node->previous = current;
+				current = node;
+				list->length++;
+			}
 		} else { //Unknown symbol
 			std::cout << "Syntax error(section: " << i+1 << ") (Unknown Symbol): " << str[i] << std::endl;
 			error = true;
