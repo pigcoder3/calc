@@ -38,7 +38,7 @@ std::string version = "2.0";
 int main(int argc, char** argv) {
 
 	//If the incorrect number of arguments were given, give the usage
-	if(argc < 2+1 || argc > 5+1) { 
+	if(argc < 2 || argc > 5) { 
 		std::cout << "Usage: calc equation [-s] [-n] [-h] [-d]\n";
 		return 0;
 	}
@@ -62,7 +62,6 @@ int main(int argc, char** argv) {
 				"Notes:\n"
 				"  [1] Quotation marks should be present to make sure that your shell interprets the equation as a single argument.\n"
 				"  [2] Calc follows rules of order of operations.\n"
-				"  [3] This does not support the distributive property, so you must put a multiplication sign (such as in Example #1).\n"
 				"\n"
 				"Specific Syntax: (Just throw these together like is done with real equations)\n"
 				"  Add: +\n"
@@ -75,10 +74,10 @@ int main(int argc, char** argv) {
 				"  Root: ((root)V(number)) Note that the parenthesis should be present to ensure that the parser reads it the correct way. Inner parenthesis are not necessary if there is only 1 number within.\n"
 				"\n"
 				"Examples: [See note 1]\n"
-				"  4*5*(3+2) 	= 100 [See note 3]\n"
+				"  4*5(3+2) 	= 100\n"
 				"  (-4^2)+2/3 	= 16.6666666\n"
-				"  |-5-2| 	= 7\n"
-				"  2/(3V8) 	= 1\n";
+				"  |-5-2| 		= 7\n"
+				"  2/(3V8) 		= 1\n";
 			std::cout << help << std::endl;
 			exit(0);
 		} else if (strncmp(argv[i], "-s", strlen(argv[i])) == 0) {
