@@ -2,9 +2,15 @@ Version naming standard:
 
 development build:
 
-	[current major/minor version] [build #]
+	[current major/minor version] build [build #]
 
 	EX: 1.5 build 4
+
+pre-version:
+
+	[upcoming major/minor version] pre-[pre #]
+
+	EX: 2.0 pre-2
 
 minor version:
 	

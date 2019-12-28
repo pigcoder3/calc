@@ -33,6 +33,8 @@
 //Project Headers
 #include "calc.h"
 
+std::string version = "2.0"
+
 int main(int argc, char** argv) {
 
 	//If the incorrect number of arguments were given, give the usage
@@ -54,6 +56,7 @@ int main(int argc, char** argv) {
 				"  -s - show steps to solve.\n"
 				"  -n - show result in scientific notation.\n"
 				"  -d - Show debug messages.\n"
+				"  -v --version - show version.\n"
 				"\n"
 				"Notes:\n"
 				"  [1] Quotation marks should be present to make sure that your shell interprets the equation as a single argument.\n"
@@ -82,6 +85,8 @@ int main(int argc, char** argv) {
 			sciNotation = true;
 		} else if (strncmp(argv[i], "-d", strlen(argv[i])) == 0) {
 			debug = true;
+		} else if ((strncmp(argv[i], "-v", strlen(argv[i])) == 0) || (strncmp(argv[i], "--version", strlen(argv[i])) == 0)) {
+			std::cout << version << std::endl;
 		}
 	}
 
