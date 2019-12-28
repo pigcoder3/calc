@@ -37,7 +37,7 @@
 
 bool showSteps = false;
 bool sciNotation = false;
-bool debug = false;
+bool debug = true;
 bool disableSyntaxCheck = false;
 int depth = 0;
 
@@ -72,7 +72,7 @@ struct node* LinkedList::jumpTo(int i);
 void LinkedList::display();
 int LinkedList::length();*/
 std::string removeZeros(std::string input);
-char getSymbol(int value);
+std::string getSymbol(int value);
 void printStep(std::string operation, int begin, int length);
 
 void calculate(struct node *sub_root_last, int startIndex, int length, bool absolute_value) {
@@ -624,28 +624,34 @@ std::string removeZeros(std::string input) {
 	return input;
 }
 
-char getSymbol(int value) {
+std::string getSymbol(int value) {
 	switch(value) {
 		case 0:
-			return '+';
+			return "+";
 		case 1:
-			return '-';
+			return "-";
 		case 2:
-			return '*';
+			return "*";
 		case 3:
-			return '/';
+			return "/";
 		case 4:
-			return 'V';
+			return "V";
 		case 5:
-			return '^';
+			return "^";
 		case 6:
-			return '(';
+			return "(";
 		case 7:
-			return ')';
+			return ")";
 		case 8:
-			return '|';
+			return "|";
+		case 9:
+			return "sin";
+		case 10:
+			return "cos";
+		case 11:
+			return "tan";
 		default:
-			return '?';
+			return "?";
 	}
 }
 
@@ -683,9 +689,25 @@ struct node* create_node(int type, long double value) {
 
 }
 
+struct node* parse_add_node(bool atFront, struct node* current, struct node* newNode) {
+
+	std::cout << newNode->value << std::endl;
+
+	if(current) {	
+		current->next = newNode;
+		newNode->previous = current;
+	} else {
+		list->root = newNode;
+	}
+	current = newNode;
+	return current; //For some reason setting the pointer wont set the actual thing (I though thats how it worked)
+
+}
+
 //Parse the entire equation into a linked list
 int parse(char *equation) {
-	
+
+	std::cout << equation << std::endl;
 	
 	//Remove all spaces
 	std::string str = equation;
@@ -699,132 +721,70 @@ int parse(char *equation) {
 
 	//Turn the equation into a linked list
 	for(int i=0; i<str.length(); i++) {
+		//std::cout << str[i] << std::endl;
+		bool atFront = false;
+		if(i==0) 
+			atFront = true;
 		char c = str[i];
-		if(c == '(') {
-			struct node *node = create_node(1,6);
-			if(i > 0){	
-				current->next = node;
-				node->previous = current;
-			} else {
-				list->root = node;
-			}
-			current = node;
+		//Trig functions
+		if((i < str.length()-3) && str[i] == 's' && str[i+1] == 'i' && str[i+2] == 'n') {
+			current = parse_add_node(atFront, current, create_node(1,9));
+			i+=2; //Compensate for the extra characters
+		} else if((i < str.length()-3) && str[i] == 'c' && str[i+1] == 'o' && str[i+2] == 's') {
+			current = parse_add_node(atFront, current, create_node(1,10));
+			i+=2; //Compensate for the extra characters
+		} else if((i < str.length()-3) && str[i] == 't' && str[i+1] == 'a' && str[i+2] == 'n') {
+			current = parse_add_node(atFront, current, create_node(1,11));
+			i+=2; //Compensate for the extra characters
+		}
+
+		//Enclosing symbols
+		else if(c == '(') {
+			current = parse_add_node(atFront, current, create_node(1,6));
 		} else if(c == ')') {
-			struct node *node = create_node(1,7);
-			if(i > 0){	
-				current->next = node;
-				node->previous = current;
-			} else {
-				list->root = node;
-			}
-			current = node;
+			current = parse_add_node(atFront, current, create_node(1,7));
 		} else if(c == '|') {
-			struct node *node = create_node(1,8);
-			if(i > 0){	
-				current->next = node;
-				node->previous = current;
-			} else {
-				list->root = node;
-			}
-			current = node;
-		} else if(c == 'V') {
-			struct node *node = create_node(1,4);
-			if(i > 0){	
-				current->next = node;
-				node->previous = current;
-			} else {
-				list->root = node;
-			}
-			current = node;
+			current = parse_add_node(atFront, current, create_node(1,8));
+		}
+
+		//Basic symbols
+		else if(c == 'V') {
+			current = parse_add_node(atFront, current, create_node(1,4));
 		} else if(c == '^') {
-			struct node *node = create_node(1,5);
-			if(i > 0){	
-				current->next = node;
-				node->previous = current;
-			} else {
-				list->root = node;
-			}
-			current = node;
+			current = parse_add_node(atFront, current, create_node(1,5));
 		} else if(c == '/') {
-			struct node *node = create_node(1,3);
-			if(i > 0){	
-				current->next = node;
-				node->previous = current;
-			} else {
-				list->root = node;
-			}
-			current = node;	
+			current = parse_add_node(atFront, current, create_node(1,3));
 		} else if(c == '*') {
-			struct node *node = create_node(1,2);
-			if(i > 0){	
-				current->next = node;
-				node->previous = current;
-			} else {
-				list->root = node;
-			}
-			current = node;
+			current = parse_add_node(atFront, current, create_node(1,2));
 		} else if(c == '+') {
-			struct node *node = create_node(1,0);
-			if(i > 0){	
-				current->next = node;
-				node->previous = current;
-			} else {
-				list->root = node;
-			}
-			current = node;	
+			current = parse_add_node(atFront, current, create_node(1,0));
 		} else if(c == '-') {
 			if (
 			(i>0 && (isdigit(str[i-1]) || str[i-1] == ')' || str[i-1] == '|'))
 			|| (!isdigit(str[i+1]) && !(str[i+1] == '.' && isdigit(str[i+2])) && !(str[i+1] == '-' && str[i+2] == '.' && isdigit(str[i+3])))
 			|| (str[i+1] == '(' || str[i+1] == '|')
 			) { //No number so this is is a negative
-				struct node *node = create_node(1,1);
-				if(i > 0){	
-					current->next = node;
-					node->previous = current;
-				} else {
-					list->root = node;
-				}
-				current = node;	
+				current = parse_add_node(atFront, current, create_node(1,1));
 			} else { //This is a number
-				struct node *node = create_node(0, getNumberAsNumber(str, i));
-				if(i > 0){	
-					current->next = node;
-					node->previous = current;
-				} else {
-					list->root = node;
-				}
-				current = node;
+				current = parse_add_node(atFront, current, create_node(0, getNumberAsNumber(str, i)));
 				i+=lastNumberGottenLength-1;
 
 				//Allow for the a following parenthesis (Distributive property)
 				if(i != str.length()-1 && str[i+1] == '(') { //Just insert a multiplication symbol in there (It works the same way)
-					struct node *node = create_node(1, 2);
-					//Note that we already know that this is not the root of the list
-					current->next = node;
-					node->previous = current;
-					current = node;
+					//We know that this cannot be at the front
+					current = parse_add_node(false, current, create_node(1, 2));
 					list->length++;
 				}
 			}
 		} else if(isdigit(str[i]) || str[i] == '.') { //This is a number
-			struct node *node = create_node(0, getNumberAsNumber(str, i));
-			if(i > 0){	
-				current->next = node;
-				node->previous = current;
-			} else {
-				list->root = node;
-			}
-			current = node;
+			std::cout << "BRUH" << std::endl;
+			current = parse_add_node(atFront, current, create_node(0, getNumberAsNumber(str, i)));
 			i+=lastNumberGottenLength-1;
 
 			//Allow for the a following parenthesis (Distributive property)
 			if(i != str.length()-1 && str[i+1] == '(') { //Just insert a multiplication symbol in there (It works the same way)
-				struct node *node = create_node(1, 2);
-				//Note that we already know that this is not the root of the list
-				current->next = node;
-				node->previous = current;
-				current = node;
+				//We know that this cannot be at the front
+				current = parse_add_node(false, current, create_node(1, 2));
 				list->length++;
 			}
 		} else { //Unknown symbol

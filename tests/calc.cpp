@@ -185,6 +185,21 @@ TEST(Parse, distributiveProperty) {
 	list->clean();
 }
 
+TEST(Parse, trigFunctions) {
+
+	//Setup
+	char *equation = (char*)("sin(1)+cos(1)+tan(1)");
+	long double listValues[] = {9, 6, 1, 7, 0, 10, 6, 1, 7, 0, 11, 6, 1, 7};
+
+	parse(equation); //The equation is stored in the linked list
+
+	//Testing
+	parseCheck(listValues, sizeof(listValues)/sizeof(long double));
+
+	//Teardown
+	list->clean();
+}
+
 /* Test Suite: Calculate
  *
  *	Test to ensure each of the following

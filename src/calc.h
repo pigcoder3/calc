@@ -103,7 +103,7 @@ std::string printLinkedList();
 std::string removeZeros(std::string input);
 
 //Returns a symbol based on the value stored in the node
-char getSymbol(int value);
+std::string getSymbol(int value);
 
 //This will print each step in the equation, showing users how it is calculated
 //Only done if the -s option is used
@@ -117,6 +117,9 @@ long double getNumberAsNumber(std::string input, int index);
 struct node* create_node(int type, long double value);
 
 std::string error_call(struct node *current);
+
+//Function used by parse() extensively to add a node to the currently-being-parsed equation
+struct node* parse_add_node(bool atFront, struct node *current, struct node *new_node);
 
 int parse(char *equation);
 
