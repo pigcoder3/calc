@@ -695,6 +695,8 @@ int parse(char *equation) {
 	list->clean(); //Reset the thing (Just for convenience for tests)
 	struct node *current = list->root;
 
+	bool error = false;
+
 	//Turn the equation into a linked list
 	for(int i=0; i<str.length(); i++) {
 		char c = str[i];
@@ -805,6 +807,9 @@ int parse(char *equation) {
 			}
 			current = node;
 			i+=lastNumberGottenLength-1;
+		} else { //Unknown symbol
+			std::cout << "Syntax error(section: " << i+1 << ") (Unknown Symbol): " << str[i] << std::endl;
+			error = true;
 		}
 
 		list->length++;
@@ -818,7 +823,6 @@ int parse(char *equation) {
 	//Check for syntax errors
 	bool inAbsoluteValue = false;
 	int parenthesisDepth = 0;
-	bool error = false;
 	current = list->root;
 	int i = 0;
 	while(current != NULL) {

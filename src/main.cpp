@@ -33,12 +33,12 @@
 //Project Headers
 #include "calc.h"
 
-std::string version = "2.0"
+std::string version = "2.0";
 
 int main(int argc, char** argv) {
 
 	//If the incorrect number of arguments were given, give the usage
-	if(argc < 2 || argc > 5) { 
+	if(argc < 2+1 || argc > 5+1) { 
 		std::cout << "Usage: calc equation [-s] [-n] [-h] [-d]\n";
 		return 0;
 	}
@@ -49,7 +49,8 @@ int main(int argc, char** argv) {
 		if(strncmp(argv[i], "--help", strlen("--help")) == 0 || strncmp(argv[i], "-h", strlen("-h")) == 0) {
 			const char* help = "[HELP]\n"
 				"Usage: calc equation [-s] [-n] [-d]\n"
-				"       calc -h\n"
+				"       calc [-h] [-v]\n"
+				"The equation ALWAYS comes first"
 				"\n"
 				"Options:\n"
 				"  -h - show this help message.\n"
@@ -61,6 +62,7 @@ int main(int argc, char** argv) {
 				"Notes:\n"
 				"  [1] Quotation marks should be present to make sure that your shell interprets the equation as a single argument.\n"
 				"  [2] Calc follows rules of order of operations.\n"
+				"  [3] This does not support the distributive property, so you must put a multiplication sign (such as in Example #1).\n"
 				"\n"
 				"Specific Syntax: (Just throw these together like is done with real equations)\n"
 				"  Add: +\n"
@@ -86,7 +88,8 @@ int main(int argc, char** argv) {
 		} else if (strncmp(argv[i], "-d", strlen(argv[i])) == 0) {
 			debug = true;
 		} else if ((strncmp(argv[i], "-v", strlen(argv[i])) == 0) || (strncmp(argv[i], "--version", strlen(argv[i])) == 0)) {
-			std::cout << version << std::endl;
+			std::cout << "version: " << version << std::endl;
+			return 0;
 		}
 	}
 
