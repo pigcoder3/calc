@@ -63,25 +63,25 @@ compile: $(OUTPUTFILE)
 all: $(OUTPUTFILE) test
 
 $(OUTPUTFILE): $(SRCBIN) $(OBJECTS)
-	#Linking	
+#Linking	
 	$(COMPILER) $(OBJECTS) -o $(OUTPUTFILE) $(SRCLIBS) $(SRCOPTIONS)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
-	$(MKDIR) $(SRCBIN) $(OBJDIR) #Cannot make this a dependency because it says it has been changed when a file within it has
-	#Create object	
+	$(MKDIR) $(SRCBIN) $(OBJDIR)
+#Create object	
 	$(COMPILER) -c $< -o $@ $(SRCLIBS) $(SRCOPTIONS)
 
 
 test: $(TESTOUTDIR) $(TESTOBJDIR) $(TESTOBJECTS) $(TESTOUTFILES)
 
 $(TESTOUTDIR)/%.test: $(TESTOBJDIR)/%.o $(OBJDIR)/%.o
-	#Link the objects
+#Link the objects
 	$(COMPILER) $^ -o $@ $(TESTLIBS) $(TESTOPTIONS)
-	#Run the new executable
+#Run the new executable
 	./$@
 
 $(TESTOBJDIR)/%.o: $(TESTDIR)/%.cpp
-	#Compile the test (Create its object file) with its respective object file
+#Compile the test (Create its object file) with its respective object file
 	$(COMPILER) -c $< -o $@ $(TESTOPTIONS)
 
 #Generated project structure directories	
