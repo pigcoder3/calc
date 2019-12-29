@@ -838,9 +838,8 @@ int parse(char *expression) {
 		} else if(isdigit(str[i]) || str[i] == '.') { //This is a number
 			current = parse_add_node(atFront, current, create_node(0, getNumberAsNumber(str, i)));
 			i+=lastNumberGottenLength-1;
-		} else { //Unknown symbol
-			std::cout << "Syntax error(section: " << i+1 << ") (Unknown Symbol): " << str[i] << std::endl;
-			error = true;
+		} else { //Unknown symbol (We'll just leave it at -1 so that we can deal with it during syntax error checking
+			current = parse_add_node(atFront, current, create_node(-1, 0));
 		}
 
 		list->length++;
@@ -866,7 +865,10 @@ int parse(char *expression) {
 			nextValue = current->next->value;
 		}
 		
-		if(type == 1) {
+		if(type == -1) { //Unknown symbol
+			std::cout << "Syntax error(section: " << i+1 << ") (Unknown Symbol): " << str[i] << std::endl;
+			error = true;
+		} else if(type == 1) {
 			if(value == 9 || value == 10 || value == 11) { //Trig functions
 				if(!current->next || (current->next && (current->next->type == 1 && current->next->value != 6))) { //We dont have a number next (Or opening parenthesis)
 					std::cout << "Syntax error(section: " << i+1 << ") (No following number/expression): " << error_call(current) << std::endl;
