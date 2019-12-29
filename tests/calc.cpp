@@ -1,5 +1,5 @@
 //Standard
-
+#include <cmath>
 
 //libs
 #include "gtest/gtest.h"
@@ -350,6 +350,24 @@ TEST(Calculate, nestedParenthesis) {
 	char *expression = (char*)("4*(4+4*(4+4))");
 	int expressionSize = 13; //Note that this needs to the be size when it is in the linked list
 	long double expected = 144;
+
+	parse(expression); //The expression is stored in the linked list
+
+	//Testing
+	calculate(NULL, 0, expressionSize, false);
+	ASSERT_EQ(expected, list->root->value);
+
+	//Teardown
+	list->clean();
+
+}
+
+TEST(Calculate, trigFunctions) {
+
+	//Setup
+	char *expression = (char*)("sin(1)/sin(1)");
+	int expressionSize = 14; //Note that this needs to the be size when it is in the linked list
+	long double expected = 1;
 
 	parse(expression); //The expression is stored in the linked list
 

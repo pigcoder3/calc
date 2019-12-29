@@ -122,9 +122,9 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 
 		if(showSteps && !scoutingPhase) { 
 			if(sub_root_last)
-				printStep("", sub_root_last->next, length+1);
+				printStep("", sub_root_last->next, length+2);
 			else
-				printStep("", list->root, length+1);
+				printStep("", list->root, length+2);
 		}
 		
 		if(scoutingPhase) { //Reset everything to scout again
@@ -148,9 +148,9 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 			int type = current->type;
 			long double value = current->value;
 
-			if(!inCalculation && !inParenthesis && !inAbsoluteValue && type == 0) {
+			if(!inCalculation && !inParenthesis && !inAbsoluteValue && (type == 0 || (type == 1 && ( value == 9 || value == 10 || value == 11)))) {
 				calculationStartIndex = i;
-				if(debug) { std::cout << "Beginning to read a calculation (Number found)" << std::endl; }
+				if(debug) { std::cout << "Beginning to read a calculation (Number found): " << value << std::endl; }
 				calculation_start_node_last = last_node;
 				inCalculation = true;
 			}
@@ -164,7 +164,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 					inCalculation = true;
 				} else if(!scoutingPhase && value == 7 && inParenthesis) { //When closing parenthesis in calculation phase, use recursion to calculate what is inside
 					depth++;
-					calculate(calculation_start_node_last, startIndex+calculationStartIndex, i-calculationStartIndex+1, false); 
+					calculate(calculation_start_node_last, startIndex+calculationStartIndex, i-calculationStartIndex+1, false);
 					length-=i-calculationStartIndex;
 						
 					inParenthesis = false;
@@ -259,8 +259,8 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 							if((showSteps || debug) && !scoutingPhase) { printStep("Sine: ", current, 2); }
 							try {
 								result = sin(current->next->value);
-								list->replace_nodes(last_node, i, i+startIndex, startIndex+i+2, result, 2);
-								length-=2;	
+								list->replace_nodes(current, i, i+startIndex, startIndex+i+2, result, 2);
+								length--;	
 							} catch(std::invalid_argument) {
 								std::cout << "Error: invalid syntax. (During Sine)" << std::endl;
 								exit(-1);
@@ -273,8 +273,8 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 							if((showSteps || debug) && !scoutingPhase) { printStep("Cosine: ", current, 2); }
 							try {
 								result = cos(current->next->value);
-								list->replace_nodes(last_node, i, i+startIndex, startIndex+i+2, result, 2);
-								length-=2;	
+								list->replace_nodes(current, i, i+startIndex, startIndex+i+2, result, 2);
+								length--;	
 							} catch(std::invalid_argument) {
 								std::cout << "Error: invalid syntax. (During Cosine)" << std::endl;
 								exit(-1);
@@ -287,7 +287,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 							if((showSteps || debug) && !scoutingPhase) { printStep("Tangent: ", current, 2); }
 							try {
 								result = tan(current->next->value);
-								list->replace_nodes(last_node, i, i+startIndex, startIndex+i+2, result, 2);
+								list->replace_nodes(current, i, i+startIndex, startIndex+i+2, result, 2);
 								length-=2;	
 							} catch(std::invalid_argument) {
 								std::cout << "Error: invalid syntax. (During Tangent)" << std::endl;
@@ -298,8 +298,8 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 							}
 
 						}
+						break;
 					}
-					break;
 				} else if(value == 2 || value == 3) { //Make sure the other parts of PEMDAS that come first do not exist
 					if(scoutingPhase) {
 						multiplyOrDivide = true;
@@ -407,7 +407,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 		calculationStartIndex = 0;
 		scoutingPhase = !scoutingPhase; //Every other loop will be a scouting phase that checks for specific things (PEMDAS)
 		//Make sure that there is nothing left to calculate
-		if(!scoutingPhase && !parenthesis && !absoluteValue && !exponentsOrRoots && !multiplyOrDivide && !addOrSubtract) { 
+		if(!scoutingPhase && !parenthesis && !absoluteValue && !exponentsOrRoots && !trigFunctions && !multiplyOrDivide && !addOrSubtract) { 
 			depth--; 
 
 			//There is no need to replace any more nodes because only 1 remains.
