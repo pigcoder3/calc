@@ -107,7 +107,7 @@ std::string getSymbol(int value);
 
 //This will print each step in the equation, showing users how it is calculated
 //Only done if the -s option is used
-void printStep(std::string operation, int begin, int length);
+void printStep(std::string operation, struct node* begin, int length);
 
 //Perform a calculation for a sub_calculation
 void calculate(struct node *sub_root_last, int startIndex, int length, bool absolute_value);

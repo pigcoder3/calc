@@ -73,7 +73,7 @@ void LinkedList::display();
 int LinkedList::length();*/
 std::string removeZeros(std::string input);
 std::string getSymbol(int value);
-void printStep(std::string operation, int begin, int length);
+void printStep(std::string operation, struct node* begin, int length);
 
 void calculate(struct node *sub_root_last, int startIndex, int length, bool absolute_value) {
 
@@ -101,11 +101,13 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 	}
 
 	//PEMDAS
+	//Note that trig functions go between e and m
 
 	bool anythingToCalculate = false;
 	bool parenthesis = false;
 	bool absoluteValue = false;
 	bool exponentsOrRoots = false; 
+	bool trigFunctions = false;
 	bool multiplyOrDivide = false;
 	bool addOrSubtract = false;
 	bool inParenthesis = false;
@@ -118,12 +120,18 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 	long double result;
 	while(true) {
 
-		if(showSteps && !scoutingPhase) { printStep("", startIndex, length); }
+		if(showSteps && !scoutingPhase) { 
+			if(sub_root_last)
+				printStep("", sub_root_last->next, length+1);
+			else
+				printStep("", list->root, length+1);
+		}
 		
 		if(scoutingPhase) { //Reset everything to scout again
 			parenthesis = false;
 			absoluteValue = false;
 			exponentsOrRoots = false;
+			trigFunctions = false;
 			multiplyOrDivide = false;
 			addOrSubtract = false;
 			inParenthesis = false;
@@ -198,7 +206,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 					if(!scoutingPhase && !parenthesis) { //Make sure the other parts of PEMDAS that come first do not exist
 						if(value == 5) {
 							
-							if((showSteps || debug) && !scoutingPhase) { printStep("Exponent: ", calculationStartIndex+startIndex, 3); }
+							if((showSteps || debug) && !scoutingPhase) { printStep("Exponent: ", last_node, 3); }
 							try {
 								result = pow(last_node->value, current->next->value);
 								list->replace_nodes(last_node, calculationStartIndex-1, calculationStartIndex+startIndex, startIndex+i+2, result, 3);
@@ -213,7 +221,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 	
 						} else if(value == 4) {
 							
-							if((showSteps || debug) && !scoutingPhase) { printStep("Root: ", calculationStartIndex+startIndex, 3); }
+							if((showSteps || debug) && !scoutingPhase) { printStep("Root: ", last_node, 3); }
 							try {
 								result = pow(current->next->value, 1.0/(last_node->value));
 								list->replace_nodes(last_node, calculationStartIndex-1, calculationStartIndex+startIndex, startIndex+i+2, result, 3);
@@ -229,9 +237,9 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 						}
 						break;
 					}
-				} else if(value == 2 || value == 3) { //Make sure the other parts of PEMDAS that come first do not exist
+				} else if(value == 9 || value == 10 || value == 11) { //Trigonometric functions
 					if(scoutingPhase) {
-						multiplyOrDivide = true;
+						trigFunctions = true;
 					}
 
 					if(inParenthesis || inAbsoluteValue) { 
@@ -247,9 +255,74 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 						continue;
 					} //Dont use this as part of the expressionif there is something higher in PEMDAS
 					else if(!scoutingPhase && !parenthesis && !exponentsOrRoots) {
+						if(value == 9) { //Sin
+							if((showSteps || debug) && !scoutingPhase) { printStep("Sine: ", current, 2); }
+							try {
+								result = sin(current->next->value);
+								list->replace_nodes(last_node, i, i+startIndex, startIndex+i+2, result, 2);
+								length-=2;	
+							} catch(std::invalid_argument) {
+								std::cout << "Error: invalid syntax. (During Sine)" << std::endl;
+								exit(-1);
+							} catch(std::out_of_range) {
+								std::cout << "Error: Number too large. (During Sine)" << std::endl;
+								exit(-1);
+							}
+
+						} else if(value == 10) { //Cos
+							if((showSteps || debug) && !scoutingPhase) { printStep("Cosine: ", current, 2); }
+							try {
+								result = cos(current->next->value);
+								list->replace_nodes(last_node, i, i+startIndex, startIndex+i+2, result, 2);
+								length-=2;	
+							} catch(std::invalid_argument) {
+								std::cout << "Error: invalid syntax. (During Cosine)" << std::endl;
+								exit(-1);
+							} catch(std::out_of_range) {
+								std::cout << "Error: Number too large. (During Cosine)" << std::endl;
+								exit(-1);
+							}
+
+						} else if(value == 11) { //Tan
+							if((showSteps || debug) && !scoutingPhase) { printStep("Tangent: ", current, 2); }
+							try {
+								result = tan(current->next->value);
+								list->replace_nodes(last_node, i, i+startIndex, startIndex+i+2, result, 2);
+								length-=2;	
+							} catch(std::invalid_argument) {
+								std::cout << "Error: invalid syntax. (During Tangent)" << std::endl;
+								exit(-1);
+							} catch(std::out_of_range) {
+								std::cout << "Error: Number too large. (During Tangent)" << std::endl;
+								exit(-1);
+							}
+
+						}
+					}
+					break;
+				} else if(value == 2 || value == 3) { //Make sure the other parts of PEMDAS that come first do not exist
+					if(scoutingPhase) {
+						multiplyOrDivide = true;
+					}
+
+					if(inParenthesis || inAbsoluteValue) { 
+						i++; //for loop index increase
+						last_node = current;
+						current = current->next;
+						continue; 
+					} 
+					
+					if(((parenthesis && !inParenthesis) || (absoluteValue && !inAbsoluteValue) || exponentsOrRoots || trigFunctions)) {
+						i++; //for loop index increase
+						current = current->next;
+						last_node = current;
+						inCalculation = false;
+						continue;
+					} //Dont use this as part of the expression if there is something higher in PEMDAS
+					else if(!scoutingPhase && !parenthesis && !exponentsOrRoots) {
 						if(value == 2) { //Multiply
 							
-							if((showSteps || debug) && !scoutingPhase) { printStep("Multiplication: ", calculationStartIndex+startIndex, 3); }
+							if((showSteps || debug) && !scoutingPhase) { printStep("Multiplication: ", last_node, 3); }
 							try {
 								result = last_node->value * current->next->value;
 								list->replace_nodes(last_node, calculationStartIndex-1, calculationStartIndex+startIndex, startIndex+i+2, result, 3);
@@ -261,8 +334,8 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 								std::cout << "Error: Number too large. (During multiplication)" << std::endl;
 								exit(-1);
 							}
-						} else { //Divide
-							if((showSteps || debug) && !scoutingPhase) { printStep("Division: ", calculationStartIndex+startIndex, 3); }
+						} else if(value == 3) { //Divide
+							if((showSteps || debug) && !scoutingPhase) { printStep("Division: ", last_node, 3); }
 							try {
 								result = last_node->value / current->next->value;
 								list->replace_nodes(last_node, calculationStartIndex-1, calculationStartIndex+startIndex, startIndex+i+2, result, 3);
@@ -274,7 +347,6 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 								std::cout << "Error: Number too large. (During division)" << std::endl;
 								exit(-1);
 							}
-	
 						}
 						break;
 					}
@@ -289,16 +361,16 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 						current = current->next;
 						continue; 
 					}
-					if(((parenthesis && !inParenthesis) || (absoluteValue && !inAbsoluteValue) || exponentsOrRoots || multiplyOrDivide)) {
+					if(((parenthesis && !inParenthesis) || (absoluteValue && !inAbsoluteValue) || exponentsOrRoots || trigFunctions || multiplyOrDivide )) {
 						i++; //for loop index increase
 						last_node = current;
 						current = current->next;
 						inCalculation = false; 
 						continue;
 					} //Dont use this as part of the expressionif there is something higher in PEMDAS
-					if(!scoutingPhase && !parenthesis && !exponentsOrRoots && !multiplyOrDivide) { //Make sure the other parts of PEMDAS that come first do not exist
+					if(!scoutingPhase && !parenthesis && !exponentsOrRoots && !trigFunctions && !multiplyOrDivide) { //Make sure the other parts of PEMDAS that come first do not exist
 						if(value == 0) { //Add
-							if((showSteps || debug) && !scoutingPhase) { printStep("Addition: ", calculationStartIndex+startIndex, 3); }
+							if((showSteps || debug) && !scoutingPhase) { printStep("Addition: ", last_node, 3); }
 							try {
 								result = last_node->value + current->next->value;
 								list->replace_nodes(last_node, calculationStartIndex-1, calculationStartIndex+startIndex, startIndex+i+2, result, 3);
@@ -311,7 +383,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 								exit(-1);
 							}
 						} else { //Subtract
-							if((showSteps || debug) && !scoutingPhase) { printStep("Subtract: ", calculationStartIndex+startIndex, 3); }
+							if((showSteps || debug) && !scoutingPhase) { printStep("Subtract: ", last_node, 3); }
 							try {
 								result = last_node->value - current->next->value;
 								list->replace_nodes(last_node, calculationStartIndex-1, calculationStartIndex+startIndex, startIndex+i+2, result, 3);
@@ -354,7 +426,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 }
 
 void LinkedList::replace_nodes(struct node *start_node, int beforeIndex, int startIndex, int afterIndex, long double result, int length) {
-	if(debug) { std::cout << "replacing nodes" << "LENGTH: " << length << std::endl; }
+	if(debug) { std::cout << "replacing nodes " << "LENGTH: " << length << std::endl; }
 	//Place the result in the linked list
 	struct node *result_node = (struct node*)malloc(sizeof(struct node));
 	result_node->type = 0;
@@ -395,7 +467,7 @@ void LinkedList::removeNode(struct node *node) {
 			list->root->previous = NULL;
 		} else { //This is the only thing in the list
 			delete list->root;
-			list->root = new struct node; //Create a new root so that this can still be used
+			list->root = NULL; //Create a new root so that this can still be used
 
 		}
 	} else {
@@ -449,7 +521,6 @@ void LinkedList::insertNode(int index, struct node* newNode) {
 			list->root = newNode;
 			newNode->previous = NULL;
 		} else {
-			std::cout << "BRUH" << std::endl;
 			list->root = newNode;
 		}
 	} else {
@@ -537,7 +608,7 @@ void LinkedList::clean() {
 
 }
 
-void printStep(std::string operation, int begin, int length) {
+void printStep(std::string operation, struct node* begin, int length) {
 
 	for(int i=0; i<depth; i++) {
 		std::cout << "  "; //Print out spacing
@@ -548,7 +619,7 @@ void printStep(std::string operation, int begin, int length) {
 	output+=operation;
 
 	//build the expressionfrom the linked list
-	struct node *current = list->jumpTo(begin);
+	struct node *current = begin;
 	int i = 0;
 	while(current != NULL && i < length) {
 		if(current->type == 0) {
@@ -831,32 +902,8 @@ int parse(char *expression) {
 					}
 				}
 				inAbsoluteValue = !inAbsoluteValue;
-			/*
-			} else if(value == 1) {
-				/
-				if(
-					(i>0 && (isdigit(str[i-1]) || str[i-1] != '(' || str[i-1] == ')' || str[i-1] == '|'))
-					|| (!isdigit(str[i+1]) && !(str[i+1] == '.' && isdigit(str[i+2])) && !(str[i+1] == '-' && str[i+2] == '.' && isdigit(str[i+3])))
-					|| (str[i+1] == '(' || str[i+1] == '|')
-				) { //Then it is a minus sign for sure
-					if(i == 0) { 
-						std::cout << "Syntax error(section: " << i+1 << ") (No preceeding number): " << error_call(current) << std::endl; //No preceeding number
-						error = true;
-					} if(current->next == NULL || (current->next != NULL && ((nextType == 1 && nextValue == 7) || (nextType == 1 && nextValue == 8 && inAbsoluteValue)))) {
-						std::cout << "Syntax error(section: " << i+1 << ") (No following number): " << error_call(current) << std::endl; //No following number
-						error = true;
-					} if(current->next != NULL && (nextType == 1 && (nextValue == 0 || nextValue == 1 || nextValue == 2 || nextValue == 3 || nextValue == 4 || nextValue == 5))) { //Double symbols
-						std::cout << "Syntax error(section: " << i+1 << ") (double symbols): " << error_call(current) << std::endl; //double symbols
-						error = true;
-					}
-				} else { //It is a negative sign
-						
-
-
-
-*/
-			} else if(value == 0 || value == 1 || value == 2 || value == 3 || value == 4 || value == 5) { //Note that the minus/negative is there
-				if(i == 0 && value != 1) { 
+			} else if(value == 0 || value == 1 || value == 2 || value == 3 || value == 4 || value == 5) {
+				if(i == 0) { 
 					std::cout << "Syntax error(section: " << i+1 << ") (No preceeding number): " << error_call(current) << std::endl; //No preceeding number
 					error = true;
 				} if(current->next == NULL || (current->next != NULL && ((nextType == 1 && nextValue == 7) || (nextType == 1 && nextValue == 8 && inAbsoluteValue)))) {
