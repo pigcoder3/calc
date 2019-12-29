@@ -803,11 +803,11 @@ int parse(char *expression) {
 				}
 			}
 			if(value == 6) { //Opening parenthesis
-				if(current->next && current->next->type == 1 && (current->next->value != 8 && current-next->value != 7)) { //Only numbers can follow (Or absolute value or opening parenthesis)
+				if(current->next && current->next->type == 1 && (current->next->value != 8 && current->next->value != 7)) { //Only numbers can follow (Or absolute value or opening parenthesis)
 					std::cout << "Syntax error(section: " << i+1 << ") (No preceeding number): " << error_call(current) << std::endl;
 					error = true;
 				}
-				if(current->next && current->next->type == 1 && current->next->vlaue != 6) {
+				if(current->next && current->next->type == 1 && current->next->value != 6) {
 					std::cout << "Syntax error(section: " << i+1 << ") (Empty Parenthesis block): " << error_call(current) << std::endl;
 					error = true;
 				}
@@ -823,6 +823,10 @@ int parse(char *expression) {
 				if(!inAbsoluteValue) {
 					if(nextType == 1 && (nextValue == 0 || nextValue == 1 || nextValue == 2 || nextValue == 3 || nextValue == 4 || nextValue == 5)) {
 						std::cout << "Syntax error(section: " << i+1 << ") (No preceeding number): " << error_call(current) << std::endl; //No preceeding number
+						error = true;
+					}
+					if(current->next && current->next->type == 1 && current->next->value == 8) {
+						std::cout << "Syntax error(section: " << i+1 << ") (Empty Parenthesis block): " << error_call(current) << std::endl;
 						error = true;
 					}
 				}
