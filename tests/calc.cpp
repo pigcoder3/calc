@@ -38,10 +38,10 @@ void parseCheck(long double values[], int size) {
 TEST(Parse, addition) {
 
 	//Setup
-	char *equation = (char*)("4+5");
+	char *expression = (char*)("4+5");
 	long double listValues[] = {4, 0, 5};
 
-	parse(equation); //The equation is stored in the linked list
+	parse(expression); //The expression is stored in the linked list
 
 	//Testing
 	parseCheck(listValues, sizeof(listValues)/sizeof(long double));
@@ -53,10 +53,10 @@ TEST(Parse, addition) {
 TEST(Parse, subtraction) {
 
 	//Setup
-	char *equation = (char*)("4-5");
+	char *expression = (char*)("4-5");
 	long double listValues[] = {4, 1, 5};
 	
-	parse(equation); //The equation is stored in the linked list
+	parse(expression); //The expression is stored in the linked list
 
 	//Testing
 	parseCheck(listValues, sizeof(listValues)/sizeof(long double));
@@ -68,10 +68,10 @@ TEST(Parse, subtraction) {
 TEST(Parse, multiplication) {
 
 	//Setup
-	char *equation = (char*)("4*5");
+	char *expression = (char*)("4*5");
 	long double listValues[] = {4, 2, 5};
 
-	parse(equation); //The equation is stored in the linked list
+	parse(expression); //The expression is stored in the linked list
 
 	//Testing
 	parseCheck(listValues, sizeof(listValues)/sizeof(long double));
@@ -83,10 +83,10 @@ TEST(Parse, multiplication) {
 TEST(Parse, division) {
 
 	//Setup
-	char *equation = (char*)("4/5");
+	char *expression = (char*)("4/5");
 	long double listValues[] = {4, 3, 5};
 	
-	parse(equation); //The equation is stored in the linked list
+	parse(expression); //The expression is stored in the linked list
 
 	//Testing
 	parseCheck(listValues, sizeof(listValues)/sizeof(long double));
@@ -98,10 +98,10 @@ TEST(Parse, division) {
 TEST(Parse, doubleNegative) {
 
 	//Setup
-	char *equation = (char*)("4--5");
+	char *expression = (char*)("4--5");
 	long double listValues[] = {4, 1, -5};
 
-	parse(equation); //The equation is stored in the linked list
+	parse(expression); //The expression is stored in the linked list
 
 	//Testing
 	parseCheck(listValues, sizeof(listValues)/sizeof(long double));
@@ -113,10 +113,10 @@ TEST(Parse, doubleNegative) {
 TEST(Parse, bareDecimal) {
 
 	//Setup
-	char *equation = (char*)("4*.5");
+	char *expression = (char*)("4*.5");
 	long double listValues[] = {4, 2, 0.5};
 
-	parse(equation); //The equation is stored in the linked list
+	parse(expression); //The expression is stored in the linked list
 
 	//Testing
 	parseCheck(listValues, sizeof(listValues)/sizeof(long double));
@@ -128,10 +128,10 @@ TEST(Parse, bareDecimal) {
 TEST(Parse, negativeBareDecimal) {
 
 	//Setup
-	char *equation = (char*)("4*-.5");
+	char *expression = (char*)("4*-.5");
 	long double listValues[] = {4, 2, -0.5};
 
-	parse(equation); //The equation is stored in the linked list
+	parse(expression); //The expression is stored in the linked list
 
 	//Testing
 	parseCheck(listValues, sizeof(listValues)/sizeof(long double));
@@ -143,10 +143,10 @@ TEST(Parse, negativeBareDecimal) {
 TEST(Parse, negativeDecimal) {
 
 	//Setup
-	char *equation = (char*)("4+-.5");
+	char *expression = (char*)("4+-.5");
 	long double listValues[] = {4, 0, -0.5};
 
-	parse(equation); //The equation is stored in the linked list
+	parse(expression); //The expression is stored in the linked list
 
 	//Testing
 	parseCheck(listValues, sizeof(listValues)/sizeof(long double));
@@ -158,10 +158,10 @@ TEST(Parse, negativeDecimal) {
 TEST(Parse, nonBareDecimal) {
 
 	//Setup
-	char *equation = (char*)("4+0.5");
+	char *expression = (char*)("4+0.5");
 	long double listValues[] = {4, 0, 0.5};
 
-	parse(equation); //The equation is stored in the linked list
+	parse(expression); //The expression is stored in the linked list
 
 	//Testing
 	parseCheck(listValues, sizeof(listValues)/sizeof(long double));
@@ -173,10 +173,10 @@ TEST(Parse, nonBareDecimal) {
 TEST(Parse, distributiveProperty) {
 
 	//Setup
-	char *equation = (char*)("4*5(3+2)");
+	char *expression = (char*)("4*5(3+2)");
 	long double listValues[] = {4, 2, 5, 2, 6, 3, 0, 2, 7};
 
-	parse(equation); //The equation is stored in the linked list
+	parse(expression); //The expression is stored in the linked list
 
 	//Testing
 	parseCheck(listValues, sizeof(listValues)/sizeof(long double));
@@ -188,10 +188,10 @@ TEST(Parse, distributiveProperty) {
 TEST(Parse, trigFunctions) {
 
 	//Setup
-	char *equation = (char*)("sin(1)+cos(1)+tan(1)");
+	char *expression = (char*)("sin(1)+cos(1)+tan(1)");
 	long double listValues[] = {9, 6, 1, 7, 0, 10, 6, 1, 7, 0, 11, 6, 1, 7};
 
-	parse(equation); //The equation is stored in the linked list
+	parse(expression); //The expression is stored in the linked list
 
 	//Testing
 	parseCheck(listValues, sizeof(listValues)/sizeof(long double));
@@ -217,14 +217,14 @@ TEST(Parse, trigFunctions) {
 TEST(Calculate, addition) {
 
 	//Setup
-	char *equation = (char*)("4+5+6");
-	int equationSize = 6; //Note that this needs to the be size when it is in the linked list
+	char *expression = (char*)("4+5+6");
+	int expressionSize = 6; //Note that this needs to the be size when it is in the linked list
 	long double expected = 15;
 	
-	parse(equation); //The equation is stored in the linked list
+	parse(expression); //The expression is stored in the linked list
 
 	//Testing
-	calculate(NULL, 0, equationSize, false);
+	calculate(NULL, 0, expressionSize, false);
 	ASSERT_EQ(expected, list->root->value);
 
 	//Teardown
@@ -235,14 +235,14 @@ TEST(Calculate, addition) {
 TEST(Calculate, subtraction) {
 
 	//Setup
-	char *equation = (char*)("4-5-6");
-	int equationSize = 6; //Note that this needs to the be size when it is in the linked list
+	char *expression = (char*)("4-5-6");
+	int expressionSize = 6; //Note that this needs to the be size when it is in the linked list
 	long double expected = -7;
 	
-	parse(equation); //The equation is stored in the linked list
+	parse(expression); //The expression is stored in the linked list
 
 	//Testing
-	calculate(NULL, 0, equationSize, false);
+	calculate(NULL, 0, expressionSize, false);
 	ASSERT_EQ(expected, list->root->value);
 
 	//Teardown
@@ -253,15 +253,15 @@ TEST(Calculate, subtraction) {
 TEST(Calculate, subtractNegative) {
 
 	//Setup
-	char *equation = (char*)("4--5");
-	int equationSize = 3; //Note that this needs to the be size when it is in the linked list
+	char *expression = (char*)("4--5");
+	int expressionSize = 3; //Note that this needs to the be size when it is in the linked list
 	long double expected = 9;
 	
-	parse(equation); //The equation is stored in the linked list
+	parse(expression); //The expression is stored in the linked list
 
 	//Testing
 
-	calculate(NULL, 0, equationSize, false);
+	calculate(NULL, 0, expressionSize, false);
 	ASSERT_EQ(expected, list->root->value);
 
 	//Teardown
@@ -272,14 +272,14 @@ TEST(Calculate, subtractNegative) {
 TEST(Calculate, multiplication) {
 
 	//Setup
-	char *equation = (char*)("4*5*6");
-	int equationSize = 6; //Note that this needs to the be size when it is in the linked list
+	char *expression = (char*)("4*5*6");
+	int expressionSize = 6; //Note that this needs to the be size when it is in the linked list
 	long double expected = 120;
 
-	parse(equation); //The equation is stored in the linked list
+	parse(expression); //The expression is stored in the linked list
 
 	//Testing
-	calculate(NULL, 0, equationSize, false);
+	calculate(NULL, 0, expressionSize, false);
 	ASSERT_EQ(expected, list->root->value);
 
 	//Teardown
@@ -290,14 +290,14 @@ TEST(Calculate, multiplication) {
 TEST(Calculate, division) {
 
 	//Setup
-	char *equation = (char*)("10/5");
-	int equationSize = 6; //Note that this needs to the be size when it is in the linked list
+	char *expression = (char*)("10/5");
+	int expressionSize = 6; //Note that this needs to the be size when it is in the linked list
 	long double expected = 2; //note the rounding
 
-	parse(equation); //The equation is stored in the linked list
+	parse(expression); //The expression is stored in the linked list
 
 	//Testing
-	calculate(NULL, 0, equationSize, false);
+	calculate(NULL, 0, expressionSize, false);
 	ASSERT_EQ(expected, list->root->value);
 
 	//Teardown
@@ -308,14 +308,14 @@ TEST(Calculate, division) {
 TEST(Calculate, exponent) {
 
 	//Setup
-	char *equation = (char*)("4^3");
-	int equationSize = 3; //Note that this needs to the be size when it is in the linked list
+	char *expression = (char*)("4^3");
+	int expressionSize = 3; //Note that this needs to the be size when it is in the linked list
 	long double expected = 64; //note the rounding
 
-	parse(equation); //The equation is stored in the linked list
+	parse(expression); //The expression is stored in the linked list
 
 	//Testing
-	calculate(NULL, 0, equationSize, false);
+	calculate(NULL, 0, expressionSize, false);
 	ASSERT_EQ(expected, list->root->value);
 
 	//Teardown
@@ -326,14 +326,14 @@ TEST(Calculate, exponent) {
 TEST(Calculate, root) {
 
 	//Setup
-	char *equation = (char*)("4*(3V8)");
-	int equationSize = 7; //Note that this needs to the be size when it is in the linked list
+	char *expression = (char*)("4*(3V8)");
+	int expressionSize = 7; //Note that this needs to the be size when it is in the linked list
 	long double expected = 8; //note the rounding
 
-	parse(equation); //The equation is stored in the linked list
+	parse(expression); //The expression is stored in the linked list
 
 	//Testing
-	calculate(NULL, 0, equationSize, false);
+	calculate(NULL, 0, expressionSize, false);
 	ASSERT_EQ(expected, list->root->value);
 
 	//Teardown
@@ -344,14 +344,14 @@ TEST(Calculate, root) {
 TEST(Calculate, parenthesis) {
 
 	//Setup
-	char *equation = (char*)("4*(4+4)");
-	int equationSize = 8; //Note that this needs to the be size when it is in the linked list
+	char *expression = (char*)("4*(4+4)");
+	int expressionSize = 8; //Note that this needs to the be size when it is in the linked list
 	long double expected = 32;
 
-	parse(equation); //The equation is stored in the linked list
+	parse(expression); //The expression is stored in the linked list
 
 	//Testing
-	calculate(NULL, 0, equationSize, false);
+	calculate(NULL, 0, expressionSize, false);
 	ASSERT_EQ(expected, list->root->value);
 
 	//Teardown
@@ -362,14 +362,14 @@ TEST(Calculate, parenthesis) {
 TEST(Calculate, nestedParenthesis) {
 
 	//Setup
-	char *equation = (char*)("4*(4+4*(4+4))");
-	int equationSize = 13; //Note that this needs to the be size when it is in the linked list
+	char *expression = (char*)("4*(4+4*(4+4))");
+	int expressionSize = 13; //Note that this needs to the be size when it is in the linked list
 	long double expected = 144;
 
-	parse(equation); //The equation is stored in the linked list
+	parse(expression); //The expression is stored in the linked list
 
 	//Testing
-	calculate(NULL, 0, equationSize, false);
+	calculate(NULL, 0, expressionSize, false);
 	ASSERT_EQ(expected, list->root->value);
 
 	//Teardown
@@ -380,14 +380,14 @@ TEST(Calculate, nestedParenthesis) {
 TEST(Calculate, distributiveProperty) {
 
 	//Setup
-	char *equation = (char*)("4*5(3+2)");
-	int equationSize = 9; //Note that this needs to the be size when it is in the linked list
+	char *expression = (char*)("4*5(3+2)");
+	int expressionSize = 9; //Note that this needs to the be size when it is in the linked list
 	long double expected = 100;
 
-	parse(equation); //The equation is stored in the linked list
+	parse(expression); //The expression is stored in the linked list
 
 	//Testing
-	calculate(NULL, 0, equationSize, false);
+	calculate(NULL, 0, expressionSize, false);
 	ASSERT_EQ(expected, list->root->value);
 
 	//Teardown

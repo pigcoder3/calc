@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
 
 	//If the incorrect number of arguments were given, give the usage
 	if(argc < 2 || argc > 5) { 
-		std::cout << "Usage: calc equation [-s] [-n] [-h] [-d]\n";
+		std::cout << "Usage: calc expression [-s] [-n] [-h] [-d]\n";
 		return 0;
 	}
 
@@ -48,9 +48,9 @@ int main(int argc, char** argv) {
 		//Send the help message
 		if(strncmp(argv[i], "--help", strlen("--help")) == 0 || strncmp(argv[i], "-h", strlen("-h")) == 0) {
 			const char* help = "[HELP]\n"
-				"Usage: calc equation [-s] [-n] [-d]\n"
+				"Usage: calc expression [-s] [-n] [-d]\n"
 				"       calc [-h] [-v]\n"
-				"The equation ALWAYS comes first"
+				"The expression ALWAYS comes first"
 				"\n"
 				"Options:\n"
 				"  -h - show this help message.\n"
@@ -60,7 +60,7 @@ int main(int argc, char** argv) {
 				"  -v --version - show version.\n"
 				"\n"
 				"Notes:\n"
-				"  [1] Quotation marks should be present to make sure that your shell interprets the equation as a single argument.\n"
+				"  [1] Quotation marks should be present to make sure that your shell interprets the expression as a single argument.\n"
 				"  [2] Calc follows rules of order of operations.\n"
 				"\n"
 				"Specific Syntax: (Just throw these together like is done with real equations)\n"

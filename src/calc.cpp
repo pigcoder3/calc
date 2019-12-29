@@ -37,7 +37,7 @@
 
 bool showSteps = false;
 bool sciNotation = false;
-bool debug = true;
+bool debug = false;
 bool disableSyntaxCheck = false;
 int depth = 0;
 
@@ -194,7 +194,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 						current = current->next;
 						inCalculation = false;
 						continue;
-					} //Dont use this as part of the equation if there is something higher in PEMDAS
+					} //Dont use this as part of the experssion if there is something higher in PEMDAS
 					if(!scoutingPhase && !parenthesis) { //Make sure the other parts of PEMDAS that come first do not exist
 						if(value == 5) {
 							
@@ -245,7 +245,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 						last_node = current;
 						inCalculation = false;
 						continue;
-					} //Dont use this as part of the equation if there is something higher in PEMDAS
+					} //Dont use this as part of the expressionif there is something higher in PEMDAS
 					else if(!scoutingPhase && !parenthesis && !exponentsOrRoots) {
 						if(value == 2) { //Multiply
 							
@@ -295,7 +295,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 						current = current->next;
 						inCalculation = false; 
 						continue;
-					} //Dont use this as part of the equation if there is something higher in PEMDAS
+					} //Dont use this as part of the expressionif there is something higher in PEMDAS
 					if(!scoutingPhase && !parenthesis && !exponentsOrRoots && !multiplyOrDivide) { //Make sure the other parts of PEMDAS that come first do not exist
 						if(value == 0) { //Add
 							if((showSteps || debug) && !scoutingPhase) { printStep("Addition: ", calculationStartIndex+startIndex, 3); }
@@ -547,7 +547,7 @@ void printStep(std::string operation, int begin, int length) {
 
 	output+=operation;
 
-	//build the equation from the linked list
+	//build the expressionfrom the linked list
 	struct node *current = list->jumpTo(begin);
 	int i = 0;
 	while(current != NULL && i < length) {
@@ -691,8 +691,6 @@ struct node* create_node(int type, long double value) {
 
 struct node* parse_add_node(bool atFront, struct node* current, struct node* newNode) {
 
-	std::cout << newNode->value << std::endl;
-
 	if(current) {	
 		current->next = newNode;
 		newNode->previous = current;
@@ -704,13 +702,11 @@ struct node* parse_add_node(bool atFront, struct node* current, struct node* new
 
 }
 
-//Parse the entire equation into a linked list
-int parse(char *equation) {
-
-	std::cout << equation << std::endl;
+//Parse the entire expression into a linked list
+int parse(char *expression) {
 	
 	//Remove all spaces
-	std::string str = equation;
+	std::string str = expression;
 	str.erase(remove_if(str.begin(), str.end(), ::isspace), str.end());
 
 	depth = 0;
@@ -721,7 +717,6 @@ int parse(char *equation) {
 
 	//Turn the equation into a linked list
 	for(int i=0; i<str.length(); i++) {
-		//std::cout << str[i] << std::endl;
 		bool atFront = false;
 		if(i==0) 
 			atFront = true;
@@ -777,7 +772,6 @@ int parse(char *equation) {
 				}
 			}
 		} else if(isdigit(str[i]) || str[i] == '.') { //This is a number
-			std::cout << "BRUH" << std::endl;
 			current = parse_add_node(atFront, current, create_node(0, getNumberAsNumber(str, i)));
 			i+=lastNumberGottenLength-1;
 
@@ -816,8 +810,14 @@ int parse(char *equation) {
 		}
 		
 		if(type == 1) {
+			if(value == 9 || value == 10 || value == 11) { //Trig functions
+				if(!current->next || (current->next && (current->next->type == 1 && current->next->value != 6))) { //We dont have a number next (Or opening parenthesis)
+					std::cout << "Syntax error(section: " << i+1 << ") (No following number/expression): " << error_call(current) << std::endl;
+					error = true;
+				}
+			}
 			if(value == 6) { //Opening parenthesis
-				if(current->next->type == 1 && current->next->value != 8) { //Only numbers can follow
+				if(current->next && current->next->type == 1 && current->next->value != 8) { //Only numbers can follow
 					std::cout << "Syntax error(section: " << i+1 << ") (No preceeding number): " << error_call(current) << std::endl;
 					error = true;
 				}
