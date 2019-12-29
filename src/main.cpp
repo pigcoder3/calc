@@ -61,7 +61,10 @@ int main(int argc, char** argv) {
 				"\n"
 				"Notes:\n"
 				"  [1] Quotation marks should be present to make sure that your shell interprets the expression as a single argument.\n"
-				"  [2] Calc follows rules of order of operations.\n"
+				"  [2] You must place multiplication symbols when using the distributive property. [See example 1]\n"
+				"  [3] Calc follows rules of order of operations.\n"
+				"    [3.1] Order of operations does not state when trigonometric functions should be calculated, so calc does it between exponents and multiplication/division.\n"
+				"       [3.1.1] It is strongly advised to use parenthesis around trig functions anyway to ensure that everything is calculated the way it is intended.\n"
 				"\n"
 				"Specific Syntax: (Just throw these together like is done with real equations)\n"
 				"  Add: +\n"
@@ -72,12 +75,14 @@ int main(int argc, char** argv) {
 				"  Absolute Value: | |\n"
 				"  Power: number^power\n"
 				"  Root: ((root)V(number)) Note that the parenthesis should be present to ensure that the parser reads it the correct way. Inner parenthesis are not necessary if there is only 1 number within.\n"
+				"  Trig function: sin(stuff) [See note 3.1]"
 				"\n"
 				"Examples: [See note 1]\n"
-				"  4*5(3+2) 	= 100\n"
-				"  (-4^2)+2/3 	= 16.6666666\n"
-				"  |-5-2| 		= 7\n"
-				"  2/(3V8) 		= 1\n";
+				"  4*5*(3+2)        = 100 [See note 2]\n"
+				"  (-4^2)+2/3       = 16.6666666\n"
+				"  |-5-2|           = 7\n"
+				"  2/(3V8)          = 1\n"
+				"  sin(1)/sin(1)    = 1\n";
 			std::cout << help << std::endl;
 			exit(0);
 		} else if (strncmp(argv[i], "-s", strlen(argv[i])) == 0) {
