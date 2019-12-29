@@ -361,21 +361,3 @@ TEST(Calculate, nestedParenthesis) {
 	list->clean();
 
 }
-
-TEST(Calculate, distributiveProperty) {
-
-	//Setup
-	char *expression = (char*)("4*5(3+2)");
-	int expressionSize = 9; //Note that this needs to the be size when it is in the linked list
-	long double expected = 100;
-
-	parse(expression); //The expression is stored in the linked list
-
-	//Testing
-	calculate(NULL, 0, expressionSize, false);
-	ASSERT_EQ(expected, list->root->value);
-
-	//Teardown
-	list->clean();
-
-}
