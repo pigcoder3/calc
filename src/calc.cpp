@@ -763,24 +763,10 @@ int parse(char *expression) {
 			} else { //This is a number
 				current = parse_add_node(atFront, current, create_node(0, getNumberAsNumber(str, i)));
 				i+=lastNumberGottenLength-1;
-
-				//Allow for the a following parenthesis (Distributive property)
-				if(i != str.length()-1 && str[i+1] == '(') { //Just insert a multiplication symbol in there (It works the same way)
-					//We know that this cannot be at the front
-					current = parse_add_node(false, current, create_node(1, 2));
-					list->length++;
-				}
 			}
 		} else if(isdigit(str[i]) || str[i] == '.') { //This is a number
 			current = parse_add_node(atFront, current, create_node(0, getNumberAsNumber(str, i)));
 			i+=lastNumberGottenLength-1;
-
-			//Allow for the a following parenthesis (Distributive property)
-			if(i != str.length()-1 && str[i+1] == '(') { //Just insert a multiplication symbol in there (It works the same way)
-				//We know that this cannot be at the front
-				current = parse_add_node(false, current, create_node(1, 2));
-				list->length++;
-			}
 		} else { //Unknown symbol
 			std::cout << "Syntax error(section: " << i+1 << ") (Unknown Symbol): " << str[i] << std::endl;
 			error = true;
@@ -817,8 +803,12 @@ int parse(char *expression) {
 				}
 			}
 			if(value == 6) { //Opening parenthesis
-				if(current->next && current->next->type == 1 && current->next->value != 8) { //Only numbers can follow
+				if(current->next && current->next->type == 1 && (current->next->value != 8 && current-next->value != 7)) { //Only numbers can follow (Or absolute value or opening parenthesis)
 					std::cout << "Syntax error(section: " << i+1 << ") (No preceeding number): " << error_call(current) << std::endl;
+					error = true;
+				}
+				if(current->next && current->next->type == 1 && current->next->vlaue != 6) {
+					std::cout << "Syntax error(section: " << i+1 << ") (Empty Parenthesis block): " << error_call(current) << std::endl;
 					error = true;
 				}
 				parenthesisDepth++;
@@ -835,10 +825,8 @@ int parse(char *expression) {
 						std::cout << "Syntax error(section: " << i+1 << ") (No preceeding number): " << error_call(current) << std::endl; //No preceeding number
 						error = true;
 					}
-					inAbsoluteValue = true;	
-				} else {
-					inAbsoluteValue = false;
 				}
+				inAbsoluteValue = !inAbsoluteValue;
 			/*
 			} else if(value == 1) {
 				/

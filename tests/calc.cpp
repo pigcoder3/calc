@@ -170,21 +170,6 @@ TEST(Parse, nonBareDecimal) {
 	list->clean();
 }
 
-TEST(Parse, distributiveProperty) {
-
-	//Setup
-	char *expression = (char*)("4*5(3+2)");
-	long double listValues[] = {4, 2, 5, 2, 6, 3, 0, 2, 7};
-
-	parse(expression); //The expression is stored in the linked list
-
-	//Testing
-	parseCheck(listValues, sizeof(listValues)/sizeof(long double));
-
-	//Teardown
-	list->clean();
-}
-
 TEST(Parse, trigFunctions) {
 
 	//Setup
