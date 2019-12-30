@@ -140,7 +140,12 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 			inCalculation = 0;
 		}
 
-		struct node *current = list->jumpTo(startIndex);
+		struct node *current;
+		if(sub_root_last) {
+			current = sub_root_last->next; //this has to be a thing because if it wasnt, then we wouldnt be in this iteration
+		} else {
+			current = list->root;
+		}
 		int i=0;
 
 		while(current != NULL && i < length) {
