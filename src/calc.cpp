@@ -592,6 +592,11 @@ struct node* LinkedList::jumpTo(int i) {
 //Free the entire list
 void LinkedList::clean() {
 
+	if(list->length == 0) { return; }
+
+//std::cout << "Cleaning up the list" << std::endl;
+	if(debug) { std::cout << "Cleaning up the list" << std::endl; }
+
 	struct node *current = list->root;
 	struct node *temp;
 

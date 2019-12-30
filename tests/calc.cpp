@@ -13,6 +13,12 @@ bool disableSyntaxChecks = true; //We wont need this here because I know the syn
 
 //int testSize = 20;
 
+long double truncate_double(long double val) {
+	std::string asString = std::to_string(val);
+	asString.resize(7);
+	return stod(asString);
+}
+
 void parseCheck(long double values[], int size) {
 
 	struct node *current = list->root;
@@ -210,7 +216,7 @@ TEST(Calculate, addition) {
 
 	//Testing
 	calculate(NULL, 0, expressionSize, false);
-	ASSERT_EQ(expected, list->root->value);
+	ASSERT_EQ(expected, truncate_double(list->root->value));
 
 	//Teardown
 	list->clean();
@@ -228,7 +234,7 @@ TEST(Calculate, subtraction) {
 
 	//Testing
 	calculate(NULL, 0, expressionSize, false);
-	ASSERT_EQ(expected, list->root->value);
+	ASSERT_EQ(expected, truncate_double(list->root->value));
 
 	//Teardown
 	list->clean();
@@ -247,7 +253,7 @@ TEST(Calculate, subtractNegative) {
 	//Testing
 
 	calculate(NULL, 0, expressionSize, false);
-	ASSERT_EQ(expected, list->root->value);
+	ASSERT_EQ(expected, truncate_double(list->root->value));
 
 	//Teardown
 	list->clean();
@@ -265,7 +271,7 @@ TEST(Calculate, multiplication) {
 
 	//Testing
 	calculate(NULL, 0, expressionSize, false);
-	ASSERT_EQ(expected, list->root->value);
+	ASSERT_EQ(expected, truncate_double(list->root->value));
 
 	//Teardown
 	list->clean();
@@ -283,7 +289,7 @@ TEST(Calculate, division) {
 
 	//Testing
 	calculate(NULL, 0, expressionSize, false);
-	ASSERT_EQ(expected, list->root->value);
+	ASSERT_EQ(expected, truncate_double(list->root->value));
 
 	//Teardown
 	list->clean();
@@ -301,7 +307,7 @@ TEST(Calculate, exponent) {
 
 	//Testing
 	calculate(NULL, 0, expressionSize, false);
-	ASSERT_EQ(expected, list->root->value);
+	ASSERT_EQ(expected, truncate_double(list->root->value));
 
 	//Teardown
 	list->clean();
@@ -319,7 +325,7 @@ TEST(Calculate, root) {
 
 	//Testing
 	calculate(NULL, 0, expressionSize, false);
-	ASSERT_EQ(expected, list->root->value);
+	ASSERT_EQ(expected, truncate_double(list->root->value));
 
 	//Teardown
 	list->clean();
@@ -337,7 +343,7 @@ TEST(Calculate, parenthesis) {
 
 	//Testing
 	calculate(NULL, 0, expressionSize, false);
-	ASSERT_EQ(expected, list->root->value);
+	ASSERT_EQ(expected, truncate_double(list->root->value));
 
 	//Teardown
 	list->clean();
@@ -355,7 +361,7 @@ TEST(Calculate, nestedParenthesis) {
 
 	//Testing
 	calculate(NULL, 0, expressionSize, false);
-	ASSERT_EQ(expected, list->root->value);
+	ASSERT_EQ(expected, truncate_double(list->root->value));
 
 	//Teardown
 	list->clean();
@@ -365,15 +371,15 @@ TEST(Calculate, nestedParenthesis) {
 TEST(Calculate, trigFunctions) {
 
 	//Setup
-	char *expression = (char*)("sin(1)/sin(1)");
+	char *expression = (char*)("sin(1)+cos(1)+tan(1)");
 	int expressionSize = 14; //Note that this needs to the be size when it is in the linked list
-	long double expected = 1;
+	long double expected = 2.93918;
 
 	parse(expression); //The expression is stored in the linked list
 
 	//Testing
 	calculate(NULL, 0, expressionSize, false);
-	ASSERT_EQ(expected, list->root->value);
+	ASSERT_EQ(expected, truncate_double(list->root->value));
 
 	//Teardown
 	list->clean();
