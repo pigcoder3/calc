@@ -428,9 +428,6 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 void LinkedList::replace_nodes(struct node *start_node, int beforeIndex, int startIndex, int afterIndex, long double result, int length) {
 	if(debug) { std::cout << "replacing nodes " << "LENGTH: " << length << std::endl; }
 	//Place the result in the linked list
-	struct node *result_node = (struct node*)malloc(sizeof(struct node));
-	result_node->type = 0;
-	result_node->value = result;
 
 	struct node *current = start_node;
 	struct node *temp;
@@ -444,7 +441,7 @@ void LinkedList::replace_nodes(struct node *start_node, int beforeIndex, int sta
 		i++;
 	}
 
-	list->insertNode(startIndex, result_node);
+	list->insertNode(startIndex, create_node(0, result));
 
 	if(debug) { list->display(); }
 
@@ -521,6 +518,7 @@ void LinkedList::insertNode(int index, struct node* newNode) {
 			list->root = newNode;
 			newNode->previous = NULL;
 		} else {
+			//std::cout << "BRUH" << std::endl;
 			list->root = newNode;
 		}
 	} else {
@@ -564,7 +562,10 @@ void LinkedList::display() {
 
 	struct node *current = list->root;
 
-	while(current) {
+	if(current) { std::cout << list->length << std::endl; }
+
+	int i=0;
+	while(current && i < list->length) {
 		std::cout << current->value << ", ";
 		current = current->next;
 	}
@@ -592,10 +593,6 @@ struct node* LinkedList::jumpTo(int i) {
 //Free the entire list
 void LinkedList::clean() {
 
-	if(list->length == 0) { return; }
-
-//std::cout << "Cleaning up the list" << std::endl;
-	if(debug) { std::cout << "Cleaning up the list" << std::endl; }
 
 	struct node *current = list->root;
 	struct node *temp;
@@ -605,6 +602,7 @@ void LinkedList::clean() {
 		temp=current->next;
   		delete current; //I always get errors here (Used to?)
 		current = temp;
+		list->length--;
 	}
 
 	list->root = NULL;

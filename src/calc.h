@@ -53,7 +53,7 @@ public:
 
 	struct node *root;
 
-	LinkedList() { length = 0; root = new node; }
+	LinkedList() { length = 0; root = NULL; }
 	~LinkedList() { clean(); }
 
 	//Replaces a list of nodes within an array with another list of nodes

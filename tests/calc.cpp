@@ -26,7 +26,7 @@ void parseCheck(long double values[], int size) {
 	EXPECT_EQ(list->length, size); //The things should be the same size
 
 	int i = 0;
-	while(current != NULL && i <= size+1) {
+	while(current != NULL && i < size) {
 		EXPECT_EQ(values[i], current->value);
 		current = current->next;
 		i++;
