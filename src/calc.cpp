@@ -83,15 +83,22 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 	}
 
 	if(depth > 0) { //Remove any paarenthesis or absolute value symbols to prevent infinite recursion
-		//std::cout << "Removing parenthesis and absolute value symbols" << std::endl;
+		if(debug) { std::cout << "Removing parenthesis and absolute value symbols" << std::endl; }
 
-		list->removeNode(sub_root_last->next);
-		length--;
+		struct node *current;
+		int i = 0;
+		if(sub_root_last) {
+			list->removeNode(sub_root_last->next);
+			length--;
+			current = sub_root_last->next;
+		} else {
+			list->removeNode(list->root);
+			length--;
+			current = list->root;
+		}
+
 		//Get to the thing
-		struct node *current = sub_root_last;
-
-		int i=0;
-		while(current && i<length) {
+		while(current->next && i<length) {
 			current = current->next;
 			i++;
 		}
@@ -140,6 +147,8 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 			inCalculation = 0;
 		}
 
+		last_node = sub_root_last;
+		calculation_start_node_last = sub_root_last;
 		struct node *current;
 		if(sub_root_last) {
 			current = sub_root_last->next; //this has to be a thing because if it wasnt, then we wouldnt be in this iteration
@@ -161,9 +170,9 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 			}
 
 			if(type == 1) {
+
 				if(value == 6) { //Getting the open parenthesis
 					calculationStartIndex = i;
-					calculation_start_node_last = last_node;
 					inParenthesis = true;
 					parenthesis = true;
 					inCalculation = true;
@@ -184,6 +193,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 							break;
 						} else { //The start
 							calculationStartIndex = i;
+							calculation_start_node_last = last_node;
 							inCalculation = true;
 							absoluteValue = true;
 							inAbsoluteValue = true;
@@ -415,7 +425,12 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 		if(!scoutingPhase && !parenthesis && !absoluteValue && !exponentsOrRoots && !trigFunctions && !multiplyOrDivide && !addOrSubtract) { 
 			depth--; 
 
-			//There is no need to replace any more nodes because only 1 remains.
+			//Only needed for empty absolute value
+			if(sub_root_last) {
+				result = sub_root_last->next->value;
+			} else {
+				result = list->root->value;
+			}
 
 			//Do absolute value if this is an absolulte value block
 			if(absolute_value) {
@@ -563,7 +578,7 @@ void LinkedList::display() {
 
 	struct node *current = list->root;
 
-	if(current) { std::cout << list->length << std::endl; }
+	//if(current) { std::cout << list->length << std::endl; }
 
 	int i=0;
 	while(current && i < list->length) {
@@ -789,6 +804,7 @@ int parse(char *expression) {
 	struct node *current = list->root;
 
 	bool error = false;
+	bool inAbsoluteValue = false;
 
 	//Turn the equation into a linked list
 	for(int i=0; i<str.length(); i++) {
@@ -815,6 +831,7 @@ int parse(char *expression) {
 			current = parse_add_node(atFront, current, create_node(1,7));
 		} else if(c == '|') {
 			current = parse_add_node(atFront, current, create_node(1,8));
+			inAbsoluteValue = !inAbsoluteValue;
 		}
 
 		//Basic symbols
@@ -830,10 +847,10 @@ int parse(char *expression) {
 			current = parse_add_node(atFront, current, create_node(1,0));
 		} else if(c == '-') {
 			if (
-			(i>0 && (isdigit(str[i-1]) || str[i-1] == ')' || str[i-1] == '|'))
+			(i>0 && (isdigit(str[i-1]) || str[i-1] == ')' || (str[i-1] == '|' && !inAbsoluteValue)))
 			|| (!isdigit(str[i+1]) && !(str[i+1] == '.' && isdigit(str[i+2])) && !(str[i+1] == '-' && str[i+2] == '.' && isdigit(str[i+3])))
 			|| (str[i+1] == '(' || str[i+1] == '|')
-			) { //No number so this is is a negative
+			) { //No number so this is is a minus
 				current = parse_add_node(atFront, current, create_node(1,1));
 			} else { //This is a number
 				current = parse_add_node(atFront, current, create_node(0, getNumberAsNumber(str, i)));
@@ -855,7 +872,7 @@ int parse(char *expression) {
 	if(disableSyntaxCheck) { return list->length; } //All there is left to do here is syntax checking
 
 	//Check for syntax errors
-	bool inAbsoluteValue = false;
+	inAbsoluteValue = false;
 	int parenthesisDepth = 0;
 	current = list->root;
 	int i = 0;
