@@ -425,16 +425,13 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 		if(!scoutingPhase && !parenthesis && !absoluteValue && !exponentsOrRoots && !trigFunctions && !multiplyOrDivide && !addOrSubtract) { 
 			depth--; 
 
-			//Only needed for empty absolute value
-			if(sub_root_last) {
-				result = sub_root_last->next->value;
-			} else {
-				result = list->root->value;
-			}
-
-			//Do absolute value if this is an absolulte value block
+			//Do absolute value if this is a absolute value block
 			if(absolute_value) {
-				list->jumpTo(startIndex)->value = abs(result);
+				if(sub_root_last) {
+					sub_root_last->next->value = abs(sub_root_last->next->value);
+				} else {
+					list->root->value = abs(list->root->value);
+				}
 			}
 
 			if(debug) { std::cout << "Done with this calculation" << std::endl; }
@@ -590,6 +587,7 @@ void LinkedList::display() {
 
 }
 
+//This is not used (as of now) in favor of less costly ways of traversing the list
 struct node* LinkedList::jumpTo(int i) {
 	
 	struct node *current = list->root;
