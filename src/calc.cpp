@@ -894,7 +894,13 @@ int parse(char *expression) {
 				}
 				parenthesisDepth++;
 			} else if(value == 7) { //Closing parenthesis
-				if(parenthesisDepth == 0) {
+				if(current->next && current->next->type == 0) {
+					std::cout << "Syntax error(section: " << i+1 << ") (Unexpected number): " << error_call(current) << " (If you were attempting to multiply them together, just throw in a multiplication symbol (*))" << std::endl;
+					error = true;	
+				} if(current->next && current->next->type == 1 && (nextValue == 9 || nextValue == 10 || nextValue == 11)) {
+					std::cout << "Syntax error(section: " << i+1 << ") (Unexpected trig function): " << error_call(current) << " (If you were attempting to multiply them together, just throw in a multiplication symbol (*))" << std::endl;
+					error = true;	
+				} if(parenthesisDepth == 0) {
 					std::cout << "Syntax error(section: " << i+1 << ") (Extra parenthesis): " << error_call(current) << std::endl;
 					error = true;
 				} else {
@@ -908,6 +914,14 @@ int parse(char *expression) {
 					}
 					if(current->next && current->next->type == 1 && current->next->value == 8) {
 						std::cout << "Syntax error(section: " << i+1 << ") (Empty Parenthesis block): " << error_call(current) << std::endl;
+						error = true;
+					}
+				} else {
+					if(current->next && current->next->type == 0) {
+						std::cout << "Syntax error(section: " << i+1 << ") (Unexpected number): " << error_call(current) << " (If you were attempting to multiply them together, just throw in a multiplication symbol (*))" << std::endl;
+						error = true;	
+					} if(current->next && current->next->type == 1 && (nextValue == 9 || nextValue == 10 || nextValue == 11)) {
+						std::cout << "Syntax error(section: " << i+1 << ") (Unexpected trig function): " << error_call(current) << " (If you were attempting to multiply them together, just throw in a multiplication symbol (*))" << std::endl;
 						error = true;
 					}
 				}
@@ -924,8 +938,14 @@ int parse(char *expression) {
 					error = true;
 				}
 			}
-		} else if(type == 0) {
-			
+		} else if(type == 0) { // A number
+			//if(current->next) { std::cout << current->next->type << std::endl; }
+
+			if(current->next != NULL && (current->next->type == 1 && (nextValue == 9 || nextValue == 10 || nextValue == 11))) {
+				std::cout << "Syntax error(section: " << i+1 << ") (unexpected trig function): " << error_call(current) << " (If you were attempting to multiply them together, just throw in a multiplication symbol (*))" << std::endl;
+				error = true;
+	
+			}
 			if(current->next != NULL && (current->next->type == 1 && (nextValue == 6 || (nextValue == 8 && !inAbsoluteValue)))) {
 				std::cout << "Syntax error(section: " << i+1 << ") (unexpected parenthesis or absolute value): " << error_call(current) << std::endl;
 				error = true;
