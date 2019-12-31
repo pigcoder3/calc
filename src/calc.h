@@ -35,6 +35,7 @@ extern bool showSteps;
 extern bool sciNotation;
 extern bool debug;
 extern int depth;
+extern bool disableSyntaxCheck;
 extern int listLength;
 
 struct node {
