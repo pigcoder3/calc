@@ -35,6 +35,7 @@ extern bool showSteps;
 extern bool sciNotation;
 extern bool debug;
 extern int depth;
+extern bool disableSyntaxCheck;
 extern int listLength;
 
 struct node {
@@ -53,7 +54,7 @@ public:
 
 	struct node *root;
 
-	LinkedList() { length = 0; root = new node; }
+	LinkedList() { length = 0; root = NULL; }
 	~LinkedList() { clean(); }
 
 	//Replaces a list of nodes within an array with another list of nodes
@@ -64,7 +65,7 @@ public:
 	void removeNode(struct node *node);
 
 	//Adds a new node in the index given
-	void insertNode(int index, struct node* newNode);
+	void insertNode(struct node* before, struct node* newNode);
 
 	//Jumps to a specific index in the linked list
 	struct node* jumpTo(int i);
@@ -103,11 +104,11 @@ std::string printLinkedList();
 std::string removeZeros(std::string input);
 
 //Returns a symbol based on the value stored in the node
-char getSymbol(int value);
+std::string getSymbol(int value);
 
 //This will print each step in the equation, showing users how it is calculated
 //Only done if the -s option is used
-void printStep(std::string operation, int begin, int length);
+void printStep(std::string operation, struct node* begin, int length);
 
 //Perform a calculation for a sub_calculation
 void calculate(struct node *sub_root_last, int startIndex, int length, bool absolute_value);
@@ -117,6 +118,9 @@ long double getNumberAsNumber(std::string input, int index);
 struct node* create_node(int type, long double value);
 
 std::string error_call(struct node *current);
+
+//Function used by parse() extensively to add a node to the currently-being-parsed equation
+struct node* parse_add_node(bool atFront, struct node *current, struct node *new_node);
 
 int parse(char *equation);
 

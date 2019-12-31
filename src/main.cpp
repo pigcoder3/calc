@@ -33,36 +33,34 @@
 //Project Headers
 #include "calc.h"
 
-std::string version = "2.0";
+std::string version = "2.1";
 
-int main(int argc, char** argv) {
-
-	//If the incorrect number of arguments were given, give the usage
-	if(argc < 2+1 || argc > 5+1) { 
-		std::cout << "Usage: calc equation [-s] [-n] [-h] [-d]\n";
-		return 0;
-	}
-
-	for(int i = 0; i < argc; i++) {
-	
-		//Send the help message
-		if(strncmp(argv[i], "--help", strlen("--help")) == 0 || strncmp(argv[i], "-h", strlen("-h")) == 0) {
-			const char* help = "[HELP]\n"
-				"Usage: calc equation [-s] [-n] [-d]\n"
+const char* help = "[HELP]\n"
+				"Usage: calc expression [-s] [-n] [-d] [-c]\n"
 				"       calc [-h] [-v]\n"
-				"The equation ALWAYS comes first"
+				"The expression ALWAYS comes first"
 				"\n"
 				"Options:\n"
 				"  -h - show this help message.\n"
 				"  -s - show steps to solve.\n"
 				"  -n - show result in scientific notation.\n"
 				"  -d - Show debug messages.\n"
+				"  -c - Disable Syntax checks. WARNING: Disabling syntax checking could cause strange\n"
+				"       errors during calculation or even give an incorrect result, because syntax\n"
+				"       checking stops the program if something is wrong. This should only be used\n"
+				"       if there is a bug in the syntax checker.\n"
 				"  -v --version - show version.\n"
 				"\n"
 				"Notes:\n"
-				"  [1] Quotation marks should be present to make sure that your shell interprets the equation as a single argument.\n"
-				"  [2] Calc follows rules of order of operations.\n"
-				"  [3] This does not support the distributive property, so you must put a multiplication sign (such as in Example #1).\n"
+				"  [1] Quotation marks should be present to make sure that your shell interprets the\n"
+				"      expression as a single argument.\n"
+				"  [2] You must place multiplication symbols when using the distributive property.\n"
+				"      [See example 1]\n"
+				"  [3] Calc follows rules of order of operations.\n"
+				"    [3.1] Order of operations does not state when trigonometric functions should be\n"
+				"          calculated, so calc does it between exponents and multiplication/division.\n"
+				"       [3.1.1] It is strongly advised to use parenthesis around trig functions anyway\n"
+				"               to ensure that everything is calculated the way it is intended.\n"
 				"\n"
 				"Specific Syntax: (Just throw these together like is done with real equations)\n"
 				"  Add: +\n"
@@ -72,13 +70,30 @@ int main(int argc, char** argv) {
 				"  Parenthesis: ( )\n"
 				"  Absolute Value: | |\n"
 				"  Power: number^power\n"
-				"  Root: ((root)V(number)) Note that the parenthesis should be present to ensure that the parser reads it the correct way. Inner parenthesis are not necessary if there is only 1 number within.\n"
+				"  Root: ((root)V(number)) Note that the parenthesis should be present to ensure that\n"
+				"        the parser reads it the correct way. Inner parenthesis are not necessary if\n"
+				"        there is only 1 number within.\n"
+				"  Trig function: sin(stuff) [See note 3.1]\n"
 				"\n"
 				"Examples: [See note 1]\n"
-				"  4*5*(3+2) 	= 100 [See note 3]\n"
-				"  (-4^2)+2/3 	= 16.6666666\n"
-				"  |-5-2| 	= 7\n"
-				"  2/(3V8) 	= 1\n";
+				"  4*5*(3+2)        = 100 [See note 2]\n"
+				"  (-4^2)+2/3       = 16.6666666\n"
+				"  |-5-2|           = 7\n"
+				"  2/(3V8)          = 1\n"
+				"  sin(1)/sin(1)    = 1\n";
+
+int main(int argc, char** argv) {
+
+	//If the incorrect number of arguments were given, give the usage
+	if(argc < 2 || argc > 5) { 
+		std::cout << help;
+		return 0;
+	}
+
+	for(int i = 0; i < argc; i++) {
+	
+		//Send the help message
+		if(strncmp(argv[i], "--help", strlen("--help")) == 0 || strncmp(argv[i], "-h", strlen("-h")) == 0) {
 			std::cout << help << std::endl;
 			exit(0);
 		} else if (strncmp(argv[i], "-s", strlen(argv[i])) == 0) {
@@ -87,6 +102,12 @@ int main(int argc, char** argv) {
 			sciNotation = true;
 		} else if (strncmp(argv[i], "-d", strlen(argv[i])) == 0) {
 			debug = true;
+		} else if (strncmp(argv[i], "-c", strlen(argv[i])) == 0) {
+			disableSyntaxCheck = true;
+			std::cout << "WARNING: You have disabled syntax checking, which is strongly ill-advised." << std::endl;
+			std::cout << "         Disabling syntax checking could cause strange errors or output" << std::endl;
+			std::cout << "         an incorrect result. Only use this if you are absolutely sure that" << std::endl;
+			std::cout << "         you have perfect syntax." << std::endl;
 		} else if ((strncmp(argv[i], "-v", strlen(argv[i])) == 0) || (strncmp(argv[i], "--version", strlen(argv[i])) == 0)) {
 			std::cout << "version: " << version << std::endl;
 			return 0;

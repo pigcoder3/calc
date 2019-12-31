@@ -72,8 +72,8 @@ struct node* LinkedList::jumpTo(int i);
 void LinkedList::display();
 int LinkedList::length();*/
 std::string removeZeros(std::string input);
-char getSymbol(int value);
-void printStep(std::string operation, int begin, int length);
+std::string getSymbol(int value);
+void printStep(std::string operation, struct node* begin, int length);
 
 void calculate(struct node *sub_root_last, int startIndex, int length, bool absolute_value) {
 
@@ -83,15 +83,22 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 	}
 
 	if(depth > 0) { //Remove any paarenthesis or absolute value symbols to prevent infinite recursion
-		//std::cout << "Removing parenthesis and absolute value symbols" << std::endl;
+		if(debug) { std::cout << "Removing parenthesis and absolute value symbols" << std::endl; }
 
-		list->removeNode(sub_root_last->next);
-		length--;
+		struct node *current;
+		int i = 0;
+		if(sub_root_last) {
+			list->removeNode(sub_root_last->next);
+			length--;
+			current = sub_root_last->next;
+		} else {
+			list->removeNode(list->root);
+			length--;
+			current = list->root;
+		}
+
 		//Get to the thing
-		struct node *current = sub_root_last;
-
-		int i=0;
-		while(current && i<length) {
+		while(current->next && i<length-1) { //We need -1 to compensate for the ->next part
 			current = current->next;
 			i++;
 		}
@@ -101,11 +108,13 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 	}
 
 	//PEMDAS
+	//Note that trig functions go between e and m
 
 	bool anythingToCalculate = false;
 	bool parenthesis = false;
 	bool absoluteValue = false;
 	bool exponentsOrRoots = false; 
+	bool trigFunctions = false;
 	bool multiplyOrDivide = false;
 	bool addOrSubtract = false;
 	bool inParenthesis = false;
@@ -118,12 +127,18 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 	long double result;
 	while(true) {
 
-		if(showSteps && !scoutingPhase) { printStep("", startIndex, length); }
+		if(showSteps && !scoutingPhase) { 
+			if(sub_root_last)
+				printStep("", sub_root_last->next, length+2);
+			else
+				printStep("", list->root, length+2);
+		}
 		
 		if(scoutingPhase) { //Reset everything to scout again
 			parenthesis = false;
 			absoluteValue = false;
 			exponentsOrRoots = false;
+			trigFunctions = false;
 			multiplyOrDivide = false;
 			addOrSubtract = false;
 			inParenthesis = false;
@@ -132,7 +147,14 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 			inCalculation = 0;
 		}
 
-		struct node *current = list->jumpTo(startIndex);
+		last_node = sub_root_last;
+		calculation_start_node_last = sub_root_last;
+		struct node *current;
+		if(sub_root_last) {
+			current = sub_root_last->next; //this has to be a thing because if it wasnt, then we wouldnt be in this iteration
+		} else {
+			current = list->root;
+		}
 		int i=0;
 
 		while(current != NULL && i < length) {
@@ -140,14 +162,15 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 			int type = current->type;
 			long double value = current->value;
 
-			if(!inCalculation && !inParenthesis && !inAbsoluteValue && type == 0) {
+			if(!inCalculation && !inParenthesis && !inAbsoluteValue && (type == 0 || (type == 1 && ( value == 9 || value == 10 || value == 11)))) {
 				calculationStartIndex = i;
-				if(debug) { std::cout << "Beginning to read a calculation (Number found)" << std::endl; }
+				if(debug) { std::cout << "Beginning to read a calculation (Number found): " << value << std::endl; }
 				calculation_start_node_last = last_node;
 				inCalculation = true;
 			}
 
 			if(type == 1) {
+
 				if(value == 6) { //Getting the open parenthesis
 					calculationStartIndex = i;
 					calculation_start_node_last = last_node;
@@ -156,7 +179,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 					inCalculation = true;
 				} else if(!scoutingPhase && value == 7 && inParenthesis) { //When closing parenthesis in calculation phase, use recursion to calculate what is inside
 					depth++;
-					calculate(calculation_start_node_last, startIndex+calculationStartIndex, i-calculationStartIndex+1, false); 
+					calculate(calculation_start_node_last, startIndex+calculationStartIndex, i-calculationStartIndex+1, false);
 					length-=i-calculationStartIndex;
 						
 					inParenthesis = false;
@@ -171,6 +194,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 							break;
 						} else { //The start
 							calculationStartIndex = i;
+							calculation_start_node_last = last_node;
 							inCalculation = true;
 							absoluteValue = true;
 							inAbsoluteValue = true;
@@ -194,11 +218,11 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 						current = current->next;
 						inCalculation = false;
 						continue;
-					} //Dont use this as part of the equation if there is something higher in PEMDAS
+					} //Dont use this as part of the experssion if there is something higher in PEMDAS
 					if(!scoutingPhase && !parenthesis) { //Make sure the other parts of PEMDAS that come first do not exist
 						if(value == 5) {
 							
-							if((showSteps || debug) && !scoutingPhase) { printStep("Exponent: ", calculationStartIndex+startIndex, 3); }
+							if((showSteps || debug) && !scoutingPhase) { printStep("Exponent: ", last_node, 3); }
 							try {
 								result = pow(last_node->value, current->next->value);
 								list->replace_nodes(last_node, calculationStartIndex-1, calculationStartIndex+startIndex, startIndex+i+2, result, 3);
@@ -213,7 +237,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 	
 						} else if(value == 4) {
 							
-							if((showSteps || debug) && !scoutingPhase) { printStep("Root: ", calculationStartIndex+startIndex, 3); }
+							if((showSteps || debug) && !scoutingPhase) { printStep("Root: ", last_node, 3); }
 							try {
 								result = pow(current->next->value, 1.0/(last_node->value));
 								list->replace_nodes(last_node, calculationStartIndex-1, calculationStartIndex+startIndex, startIndex+i+2, result, 3);
@@ -229,9 +253,9 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 						}
 						break;
 					}
-				} else if(value == 2 || value == 3) { //Make sure the other parts of PEMDAS that come first do not exist
+				} else if(value == 9 || value == 10 || value == 11) { //Trigonometric functions
 					if(scoutingPhase) {
-						multiplyOrDivide = true;
+						trigFunctions = true;
 					}
 
 					if(inParenthesis || inAbsoluteValue) { 
@@ -245,11 +269,76 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 						last_node = current;
 						inCalculation = false;
 						continue;
-					} //Dont use this as part of the equation if there is something higher in PEMDAS
+					} //Dont use this as part of the expressionif there is something higher in PEMDAS
+					else if(!scoutingPhase && !parenthesis && !exponentsOrRoots) {
+						if(value == 9) { //Sin
+							if((showSteps || debug) && !scoutingPhase) { printStep("Sine: ", current, 2); }
+							try {
+								result = sin(current->next->value);
+								list->replace_nodes(current, i, i+startIndex, startIndex+i+2, result, 2);
+								length--;	
+							} catch(std::invalid_argument) {
+								std::cout << "Error: invalid syntax. (During Sine)" << std::endl;
+								exit(-1);
+							} catch(std::out_of_range) {
+								std::cout << "Error: Number too large. (During Sine)" << std::endl;
+								exit(-1);
+							}
+
+						} else if(value == 10) { //Cos
+							if((showSteps || debug) && !scoutingPhase) { printStep("Cosine: ", current, 2); }
+							try {
+								result = cos(current->next->value);
+								list->replace_nodes(current, i, i+startIndex, startIndex+i+2, result, 2);
+								length--;	
+							} catch(std::invalid_argument) {
+								std::cout << "Error: invalid syntax. (During Cosine)" << std::endl;
+								exit(-1);
+							} catch(std::out_of_range) {
+								std::cout << "Error: Number too large. (During Cosine)" << std::endl;
+								exit(-1);
+							}
+
+						} else if(value == 11) { //Tan
+							if((showSteps || debug) && !scoutingPhase) { printStep("Tangent: ", current, 2); }
+							try {
+								result = tan(current->next->value);
+								list->replace_nodes(current, i, i+startIndex, startIndex+i+2, result, 2);
+								length-=2;	
+							} catch(std::invalid_argument) {
+								std::cout << "Error: invalid syntax. (During Tangent)" << std::endl;
+								exit(-1);
+							} catch(std::out_of_range) {
+								std::cout << "Error: Number too large. (During Tangent)" << std::endl;
+								exit(-1);
+							}
+
+						}
+						break;
+					}
+				} else if(value == 2 || value == 3) { //Make sure the other parts of PEMDAS that come first do not exist
+					if(scoutingPhase) {
+						multiplyOrDivide = true;
+					}
+
+					if(inParenthesis || inAbsoluteValue) { 
+						i++; //for loop index increase
+						last_node = current;
+						current = current->next;
+						continue; 
+					} 
+					
+					if(((parenthesis && !inParenthesis) || (absoluteValue && !inAbsoluteValue) || exponentsOrRoots || trigFunctions)) {
+						i++; //for loop index increase
+						current = current->next;
+						last_node = current;
+						inCalculation = false;
+						continue;
+					} //Dont use this as part of the expression if there is something higher in PEMDAS
 					else if(!scoutingPhase && !parenthesis && !exponentsOrRoots) {
 						if(value == 2) { //Multiply
 							
-							if((showSteps || debug) && !scoutingPhase) { printStep("Multiplication: ", calculationStartIndex+startIndex, 3); }
+							if((showSteps || debug) && !scoutingPhase) { printStep("Multiplication: ", last_node, 3); }
 							try {
 								result = last_node->value * current->next->value;
 								list->replace_nodes(last_node, calculationStartIndex-1, calculationStartIndex+startIndex, startIndex+i+2, result, 3);
@@ -261,8 +350,8 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 								std::cout << "Error: Number too large. (During multiplication)" << std::endl;
 								exit(-1);
 							}
-						} else { //Divide
-							if((showSteps || debug) && !scoutingPhase) { printStep("Division: ", calculationStartIndex+startIndex, 3); }
+						} else if(value == 3) { //Divide
+							if((showSteps || debug) && !scoutingPhase) { printStep("Division: ", last_node, 3); }
 							try {
 								result = last_node->value / current->next->value;
 								list->replace_nodes(last_node, calculationStartIndex-1, calculationStartIndex+startIndex, startIndex+i+2, result, 3);
@@ -274,7 +363,6 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 								std::cout << "Error: Number too large. (During division)" << std::endl;
 								exit(-1);
 							}
-	
 						}
 						break;
 					}
@@ -289,16 +377,16 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 						current = current->next;
 						continue; 
 					}
-					if(((parenthesis && !inParenthesis) || (absoluteValue && !inAbsoluteValue) || exponentsOrRoots || multiplyOrDivide)) {
+					if(((parenthesis && !inParenthesis) || (absoluteValue && !inAbsoluteValue) || exponentsOrRoots || trigFunctions || multiplyOrDivide )) {
 						i++; //for loop index increase
 						last_node = current;
 						current = current->next;
 						inCalculation = false; 
 						continue;
-					} //Dont use this as part of the equation if there is something higher in PEMDAS
-					if(!scoutingPhase && !parenthesis && !exponentsOrRoots && !multiplyOrDivide) { //Make sure the other parts of PEMDAS that come first do not exist
+					} //Dont use this as part of the expressionif there is something higher in PEMDAS
+					if(!scoutingPhase && !parenthesis && !exponentsOrRoots && !trigFunctions && !multiplyOrDivide) { //Make sure the other parts of PEMDAS that come first do not exist
 						if(value == 0) { //Add
-							if((showSteps || debug) && !scoutingPhase) { printStep("Addition: ", calculationStartIndex+startIndex, 3); }
+							if((showSteps || debug) && !scoutingPhase) { printStep("Addition: ", last_node, 3); }
 							try {
 								result = last_node->value + current->next->value;
 								list->replace_nodes(last_node, calculationStartIndex-1, calculationStartIndex+startIndex, startIndex+i+2, result, 3);
@@ -311,7 +399,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 								exit(-1);
 							}
 						} else { //Subtract
-							if((showSteps || debug) && !scoutingPhase) { printStep("Subtract: ", calculationStartIndex+startIndex, 3); }
+							if((showSteps || debug) && !scoutingPhase) { printStep("Subtract: ", last_node, 3); }
 							try {
 								result = last_node->value - current->next->value;
 								list->replace_nodes(last_node, calculationStartIndex-1, calculationStartIndex+startIndex, startIndex+i+2, result, 3);
@@ -335,14 +423,16 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 		calculationStartIndex = 0;
 		scoutingPhase = !scoutingPhase; //Every other loop will be a scouting phase that checks for specific things (PEMDAS)
 		//Make sure that there is nothing left to calculate
-		if(!scoutingPhase && !parenthesis && !absoluteValue && !exponentsOrRoots && !multiplyOrDivide && !addOrSubtract) { 
+		if(!scoutingPhase && !parenthesis && !absoluteValue && !exponentsOrRoots && !trigFunctions && !multiplyOrDivide && !addOrSubtract) { 
 			depth--; 
 
-			//There is no need to replace any more nodes because only 1 remains.
-
-			//Do absolute value if this is an absolulte value block
+			//Do absolute value if this is a absolute value block
 			if(absolute_value) {
-				list->jumpTo(startIndex)->value = abs(result);
+				if(sub_root_last) {
+					sub_root_last->next->value = abs(sub_root_last->next->value);
+				} else {
+					list->root->value = abs(list->root->value);
+				}
 			}
 
 			if(debug) { std::cout << "Done with this calculation" << std::endl; }
@@ -354,11 +444,14 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 }
 
 void LinkedList::replace_nodes(struct node *start_node, int beforeIndex, int startIndex, int afterIndex, long double result, int length) {
-	if(debug) { std::cout << "replacing nodes" << "LENGTH: " << length << std::endl; }
+	if(debug) { std::cout << "replacing nodes " << "LENGTH: " << length << std::endl; }
 	//Place the result in the linked list
-	struct node *result_node = (struct node*)malloc(sizeof(struct node));
-	result_node->type = 0;
-	result_node->value = result;
+
+	struct node *before;
+	if(startIndex == 0)
+		before = NULL;
+	else 
+		before = start_node->previous;
 
 	struct node *current = start_node;
 	struct node *temp;
@@ -372,7 +465,7 @@ void LinkedList::replace_nodes(struct node *start_node, int beforeIndex, int sta
 		i++;
 	}
 
-	list->insertNode(startIndex, result_node);
+	list->insertNode(before, create_node(0, result));
 
 	if(debug) { list->display(); }
 
@@ -395,7 +488,7 @@ void LinkedList::removeNode(struct node *node) {
 			list->root->previous = NULL;
 		} else { //This is the only thing in the list
 			delete list->root;
-			list->root = new struct node; //Create a new root so that this can still be used
+			list->root = NULL; //Create a new root so that this can still be used
 
 		}
 	} else {
@@ -422,26 +515,17 @@ void LinkedList::removeNode(struct node *node) {
 
 }
 
-//Optimize this?
-void LinkedList::insertNode(int index, struct node* newNode) {
+//Before is the node before the newNode
+void LinkedList::insertNode(struct node *before, struct node* newNode) {
 	
 	if(debug) {
-		std::cout << "inserting node: " << index << std::endl;	
-		std::cout << "new node value: " << newNode->value << " Index: " << index << std::endl;
+		std::cout << "inserting node " << std::endl;	
+		std::cout << "new node value: " << newNode->value << std::endl;
 	}
 
-	struct node *current = list->root;
-	struct node *last;
+	struct node *last = before;
 
-	int i=0;
-
-	while(current && i < index) { //Get to the right place
-		i++;
-		last = current;
-		current = current->next;	
-	}
-
-	if(i == 0) {
+	if(before == NULL) { //We are at the front so before is null
 		if(debug) { std::cout << "The added node will be at the front" << std::endl; }
 		if(list->root) {
 			newNode->next = list->root; 
@@ -449,15 +533,14 @@ void LinkedList::insertNode(int index, struct node* newNode) {
 			list->root = newNode;
 			newNode->previous = NULL;
 		} else {
-			std::cout << "BRUH" << std::endl;
 			list->root = newNode;
 		}
 	} else {
 		if(debug) { std::cout << "The added node will be somewhere inside the list" << std::endl; }
-		if(i < list->length) { //Not at the end. +1 is there to ensure that it is supposed to be put at the end and not the 2nd to last index
+		if(before->next) {
 			if(debug) { std::cout << "Not at the end" << std::endl; }
-			newNode->next = current; //add it
-			current->previous = newNode;
+			newNode->next = last->next; //add it
+			newNode->next->previous = newNode;
 		} else {
 			if(debug) { std::cout << "At the end" << std::endl;}
 			newNode->next = NULL;
@@ -493,7 +576,10 @@ void LinkedList::display() {
 
 	struct node *current = list->root;
 
-	while(current) {
+	//if(current) { std::cout << list->length << std::endl; }
+
+	int i=0;
+	while(current && i < list->length) {
 		std::cout << current->value << ", ";
 		current = current->next;
 	}
@@ -502,6 +588,7 @@ void LinkedList::display() {
 
 }
 
+//This is not used (as of now) in favor of less costly ways of traversing the list
 struct node* LinkedList::jumpTo(int i) {
 	
 	struct node *current = list->root;
@@ -521,6 +608,7 @@ struct node* LinkedList::jumpTo(int i) {
 //Free the entire list
 void LinkedList::clean() {
 
+
 	struct node *current = list->root;
 	struct node *temp;
 
@@ -529,6 +617,7 @@ void LinkedList::clean() {
 		temp=current->next;
   		delete current; //I always get errors here (Used to?)
 		current = temp;
+		list->length--;
 	}
 
 	list->root = NULL;
@@ -537,7 +626,7 @@ void LinkedList::clean() {
 
 }
 
-void printStep(std::string operation, int begin, int length) {
+void printStep(std::string operation, struct node* begin, int length) {
 
 	for(int i=0; i<depth; i++) {
 		std::cout << "  "; //Print out spacing
@@ -547,8 +636,8 @@ void printStep(std::string operation, int begin, int length) {
 
 	output+=operation;
 
-	//build the equation from the linked list
-	struct node *current = list->jumpTo(begin);
+	//build the expressionfrom the linked list
+	struct node *current = begin;
 	int i = 0;
 	while(current != NULL && i < length) {
 		if(current->type == 0) {
@@ -624,28 +713,34 @@ std::string removeZeros(std::string input) {
 	return input;
 }
 
-char getSymbol(int value) {
+std::string getSymbol(int value) {
 	switch(value) {
 		case 0:
-			return '+';
+			return "+";
 		case 1:
-			return '-';
+			return "-";
 		case 2:
-			return '*';
+			return "*";
 		case 3:
-			return '/';
+			return "/";
 		case 4:
-			return 'V';
+			return "V";
 		case 5:
-			return '^';
+			return "^";
 		case 6:
-			return '(';
+			return "(";
 		case 7:
-			return ')';
+			return ")";
 		case 8:
-			return '|';
+			return "|";
+		case 9:
+			return "sin";
+		case 10:
+			return "cos";
+		case 11:
+			return "tan";
 		default:
-			return '?';
+			return "?";
 	}
 }
 
@@ -683,12 +778,24 @@ struct node* create_node(int type, long double value) {
 
 }
 
-//Parse the entire equation into a linked list
-int parse(char *equation) {
-	
+struct node* parse_add_node(bool atFront, struct node* current, struct node* newNode) {
+
+	if(list->root) {	
+		current->next = newNode;
+		newNode->previous = current;
+	} else {
+		list->root = newNode;
+	}
+	current = newNode;
+	return current; //For some reason setting the pointer wont set the actual thing (I thought thats how it worked)
+
+}
+
+//Parse the entire expression into a linked list
+int parse(char *expression) {
 	
 	//Remove all spaces
-	std::string str = equation;
+	std::string str = expression;
 	str.erase(remove_if(str.begin(), str.end(), ::isspace), str.end());
 
 	depth = 0;
@@ -696,120 +803,63 @@ int parse(char *equation) {
 	struct node *current = list->root;
 
 	bool error = false;
+	bool inAbsoluteValue = false;
 
 	//Turn the equation into a linked list
 	for(int i=0; i<str.length(); i++) {
+		bool atFront = false;
+		if(i==0) 
+			atFront = true;
 		char c = str[i];
-		if(c == '(') {
-			struct node *node = create_node(1,6);
-			if(i > 0){	
-				current->next = node;
-				node->previous = current;
-			} else {
-				list->root = node;
-			}
-			current = node;
+		//Trig functions
+		if((i < str.length()-3) && str[i] == 's' && str[i+1] == 'i' && str[i+2] == 'n') {
+			current = parse_add_node(atFront, current, create_node(1,9));
+			i+=2; //Compensate for the extra characters
+		} else if((i < str.length()-3) && str[i] == 'c' && str[i+1] == 'o' && str[i+2] == 's') {
+			current = parse_add_node(atFront, current, create_node(1,10));
+			i+=2; //Compensate for the extra characters
+		} else if((i < str.length()-3) && str[i] == 't' && str[i+1] == 'a' && str[i+2] == 'n') {
+			current = parse_add_node(atFront, current, create_node(1,11));
+			i+=2; //Compensate for the extra characters
+		}
+
+		//Enclosing symbols
+		else if(c == '(') {
+			current = parse_add_node(atFront, current, create_node(1,6));
 		} else if(c == ')') {
-			struct node *node = create_node(1,7);
-			if(i > 0){	
-				current->next = node;
-				node->previous = current;
-			} else {
-				list->root = node;
-			}
-			current = node;
+			current = parse_add_node(atFront, current, create_node(1,7));
 		} else if(c == '|') {
-			struct node *node = create_node(1,8);
-			if(i > 0){	
-				current->next = node;
-				node->previous = current;
-			} else {
-				list->root = node;
-			}
-			current = node;
-		} else if(c == 'V') {
-			struct node *node = create_node(1,4);
-			if(i > 0){	
-				current->next = node;
-				node->previous = current;
-			} else {
-				list->root = node;
-			}
-			current = node;
+			current = parse_add_node(atFront, current, create_node(1,8));
+			inAbsoluteValue = !inAbsoluteValue;
+		}
+
+		//Basic symbols
+		else if(c == 'V') {
+			current = parse_add_node(atFront, current, create_node(1,4));
 		} else if(c == '^') {
-			struct node *node = create_node(1,5);
-			if(i > 0){	
-				current->next = node;
-				node->previous = current;
-			} else {
-				list->root = node;
-			}
-			current = node;
+			current = parse_add_node(atFront, current, create_node(1,5));
 		} else if(c == '/') {
-			struct node *node = create_node(1,3);
-			if(i > 0){	
-				current->next = node;
-				node->previous = current;
-			} else {
-				list->root = node;
-			}
-			current = node;	
+			current = parse_add_node(atFront, current, create_node(1,3));
 		} else if(c == '*') {
-			struct node *node = create_node(1,2);
-			if(i > 0){	
-				current->next = node;
-				node->previous = current;
-			} else {
-				list->root = node;
-			}
-			current = node;
+			current = parse_add_node(atFront, current, create_node(1,2));
 		} else if(c == '+') {
-			struct node *node = create_node(1,0);
-			if(i > 0){	
-				current->next = node;
-				node->previous = current;
-			} else {
-				list->root = node;
-			}
-			current = node;	
+			current = parse_add_node(atFront, current, create_node(1,0));
 		} else if(c == '-') {
 			if (
-			(i>0 && (isdigit(str[i-1]) || str[i-1] == ')' || str[i-1] == '|'))
+			(i>0 && (isdigit(str[i-1]) || str[i-1] == ')' || (str[i-1] == '|' && !inAbsoluteValue)))
 			|| (!isdigit(str[i+1]) && !(str[i+1] == '.' && isdigit(str[i+2])) && !(str[i+1] == '-' && str[i+2] == '.' && isdigit(str[i+3])))
 			|| (str[i+1] == '(' || str[i+1] == '|')
-			) { //No number so this is is a negative
-				struct node *node = create_node(1,1);
-				if(i > 0){	
-					current->next = node;
-					node->previous = current;
-				} else {
-					list->root = node;
-				}
-				current = node;	
+			) { //No number so this is is a minus
+				current = parse_add_node(atFront, current, create_node(1,1));
 			} else { //This is a number
-				struct node *node = create_node(0, getNumberAsNumber(str, i));
-				if(i > 0){	
-					current->next = node;
-					node->previous = current;
-				} else {
-					list->root = node;
-				}
-				current = node;
+				current = parse_add_node(atFront, current, create_node(0, getNumberAsNumber(str, i)));
 				i+=lastNumberGottenLength-1;
 			}
 		} else if(isdigit(str[i]) || str[i] == '.') { //This is a number
-			struct node *node = create_node(0, getNumberAsNumber(str, i));
-			if(i > 0){	
-				current->next = node;
-				node->previous = current;
-			} else {
-				list->root = node;
-			}
-			current = node;
+			current = parse_add_node(atFront, current, create_node(0, getNumberAsNumber(str, i)));
 			i+=lastNumberGottenLength-1;
-		} else { //Unknown symbol
-			std::cout << "Syntax error(section: " << i+1 << ") (Unknown Symbol): " << str[i] << std::endl;
-			error = true;
+		} else { //Unknown symbol (We'll just leave it at -1 so that we can deal with it during syntax error checking
+			current = parse_add_node(atFront, current, create_node(-1, 0));
 		}
 
 		list->length++;
@@ -821,7 +871,7 @@ int parse(char *equation) {
 	if(disableSyntaxCheck) { return list->length; } //All there is left to do here is syntax checking
 
 	//Check for syntax errors
-	bool inAbsoluteValue = false;
+	inAbsoluteValue = false;
 	int parenthesisDepth = 0;
 	current = list->root;
 	int i = 0;
@@ -835,15 +885,34 @@ int parse(char *equation) {
 			nextValue = current->next->value;
 		}
 		
-		if(type == 1) {
+		if(type == -1) { //Unknown symbol
+			std::cout << "Syntax error(section: " << i+1 << ") (Unknown Symbol): " << str[i] << std::endl;
+			error = true;
+		} else if(type == 1) {
+			if(value == 9 || value == 10 || value == 11) { //Trig functions
+				if(!current->next || (current->next && (current->next->type == 1 && current->next->value != 6))) { //We dont have a number next (Or opening parenthesis)
+					std::cout << "Syntax error(section: " << i+1 << ") (No following number/expression): " << error_call(current) << std::endl;
+					error = true;
+				}
+			}
 			if(value == 6) { //Opening parenthesis
-				if(current->next->type == 1 && current->next->value != 8) { //Only numbers can follow
+				if(current->next && current->next->type == 1 && (current->next->value != 8 && current->next->value != 7)) { //Only numbers can follow (Or absolute value or opening parenthesis)
 					std::cout << "Syntax error(section: " << i+1 << ") (No preceeding number): " << error_call(current) << std::endl;
+					error = true;
+				}
+				if(current->next && current->next->type == 1 && current->next->value != 6) {
+					std::cout << "Syntax error(section: " << i+1 << ") (Empty Parenthesis block): " << error_call(current) << std::endl;
 					error = true;
 				}
 				parenthesisDepth++;
 			} else if(value == 7) { //Closing parenthesis
-				if(parenthesisDepth == 0) {
+				if(current->next && current->next->type == 0) {
+					std::cout << "Syntax error(section: " << i+1 << ") (Unexpected number): " << error_call(current) << " (If you were attempting to multiply them together, just throw in a multiplication symbol (*))" << std::endl;
+					error = true;	
+				} if(current->next && current->next->type == 1 && (nextValue == 9 || nextValue == 10 || nextValue == 11)) {
+					std::cout << "Syntax error(section: " << i+1 << ") (Unexpected trig function): " << error_call(current) << " (If you were attempting to multiply them together, just throw in a multiplication symbol (*))" << std::endl;
+					error = true;	
+				} if(parenthesisDepth == 0) {
 					std::cout << "Syntax error(section: " << i+1 << ") (Extra parenthesis): " << error_call(current) << std::endl;
 					error = true;
 				} else {
@@ -855,36 +924,22 @@ int parse(char *equation) {
 						std::cout << "Syntax error(section: " << i+1 << ") (No preceeding number): " << error_call(current) << std::endl; //No preceeding number
 						error = true;
 					}
-					inAbsoluteValue = true;	
-				} else {
-					inAbsoluteValue = false;
-				}
-			/*
-			} else if(value == 1) {
-				/
-				if(
-					(i>0 && (isdigit(str[i-1]) || str[i-1] != '(' || str[i-1] == ')' || str[i-1] == '|'))
-					|| (!isdigit(str[i+1]) && !(str[i+1] == '.' && isdigit(str[i+2])) && !(str[i+1] == '-' && str[i+2] == '.' && isdigit(str[i+3])))
-					|| (str[i+1] == '(' || str[i+1] == '|')
-				) { //Then it is a minus sign for sure
-					if(i == 0) { 
-						std::cout << "Syntax error(section: " << i+1 << ") (No preceeding number): " << error_call(current) << std::endl; //No preceeding number
-						error = true;
-					} if(current->next == NULL || (current->next != NULL && ((nextType == 1 && nextValue == 7) || (nextType == 1 && nextValue == 8 && inAbsoluteValue)))) {
-						std::cout << "Syntax error(section: " << i+1 << ") (No following number): " << error_call(current) << std::endl; //No following number
-						error = true;
-					} if(current->next != NULL && (nextType == 1 && (nextValue == 0 || nextValue == 1 || nextValue == 2 || nextValue == 3 || nextValue == 4 || nextValue == 5))) { //Double symbols
-						std::cout << "Syntax error(section: " << i+1 << ") (double symbols): " << error_call(current) << std::endl; //double symbols
+					if(current->next && current->next->type == 1 && current->next->value == 8) {
+						std::cout << "Syntax error(section: " << i+1 << ") (Empty Parenthesis block): " << error_call(current) << std::endl;
 						error = true;
 					}
-				} else { //It is a negative sign
-						
-
-
-
-*/
-			} else if(value == 0 || value == 1 || value == 2 || value == 3 || value == 4 || value == 5) { //Note that the minus/negative is there
-				if(i == 0 && value != 1) { 
+				} else {
+					if(current->next && current->next->type == 0) {
+						std::cout << "Syntax error(section: " << i+1 << ") (Unexpected number): " << error_call(current) << " (If you were attempting to multiply them together, just throw in a multiplication symbol (*))" << std::endl;
+						error = true;	
+					} if(current->next && current->next->type == 1 && (nextValue == 9 || nextValue == 10 || nextValue == 11)) {
+						std::cout << "Syntax error(section: " << i+1 << ") (Unexpected trig function): " << error_call(current) << " (If you were attempting to multiply them together, just throw in a multiplication symbol (*))" << std::endl;
+						error = true;
+					}
+				}
+				inAbsoluteValue = !inAbsoluteValue;
+			} else if(value == 0 || value == 1 || value == 2 || value == 3 || value == 4 || value == 5) {
+				if(i == 0) { 
 					std::cout << "Syntax error(section: " << i+1 << ") (No preceeding number): " << error_call(current) << std::endl; //No preceeding number
 					error = true;
 				} if(current->next == NULL || (current->next != NULL && ((nextType == 1 && nextValue == 7) || (nextType == 1 && nextValue == 8 && inAbsoluteValue)))) {
@@ -895,8 +950,14 @@ int parse(char *equation) {
 					error = true;
 				}
 			}
-		} else if(type == 0) {
-			
+		} else if(type == 0) { // A number
+			//if(current->next) { std::cout << current->next->type << std::endl; }
+
+			if(current->next != NULL && (current->next->type == 1 && (nextValue == 9 || nextValue == 10 || nextValue == 11))) {
+				std::cout << "Syntax error(section: " << i+1 << ") (unexpected trig function): " << error_call(current) << " (If you were attempting to multiply them together, just throw in a multiplication symbol (*))" << std::endl;
+				error = true;
+	
+			}
 			if(current->next != NULL && (current->next->type == 1 && (nextValue == 6 || (nextValue == 8 && !inAbsoluteValue)))) {
 				std::cout << "Syntax error(section: " << i+1 << ") (unexpected parenthesis or absolute value): " << error_call(current) << std::endl;
 				error = true;
