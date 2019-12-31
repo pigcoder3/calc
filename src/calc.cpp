@@ -98,7 +98,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 		}
 
 		//Get to the thing
-		while(current->next && i<length) {
+		while(current->next && i<length-1) { //We need -1 to compensate for the ->next part
 			current = current->next;
 			i++;
 		}
@@ -173,6 +173,7 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 
 				if(value == 6) { //Getting the open parenthesis
 					calculationStartIndex = i;
+					calculation_start_node_last = last_node;
 					inParenthesis = true;
 					parenthesis = true;
 					inCalculation = true;
