@@ -434,6 +434,12 @@ void LinkedList::replace_nodes(struct node *start_node, int beforeIndex, int sta
 	if(debug) { std::cout << "replacing nodes " << "LENGTH: " << length << std::endl; }
 	//Place the result in the linked list
 
+	struct node *before;
+	if(startIndex == 0)
+		before = NULL;
+	else 
+		before = start_node->previous;
+
 	struct node *current = start_node;
 	struct node *temp;
 
@@ -446,7 +452,7 @@ void LinkedList::replace_nodes(struct node *start_node, int beforeIndex, int sta
 		i++;
 	}
 
-	list->insertNode(startIndex, create_node(0, result));
+	list->insertNode(before, create_node(0, result));
 
 	if(debug) { list->display(); }
 
@@ -496,26 +502,17 @@ void LinkedList::removeNode(struct node *node) {
 
 }
 
-//Optimize this?
-void LinkedList::insertNode(int index, struct node* newNode) {
+//Before is the node before the newNode
+void LinkedList::insertNode(struct node *before, struct node* newNode) {
 	
 	if(debug) {
-		std::cout << "inserting node: " << index << std::endl;	
-		std::cout << "new node value: " << newNode->value << " Index: " << index << std::endl;
+		std::cout << "inserting node " << std::endl;	
+		std::cout << "new node value: " << newNode->value << std::endl;
 	}
 
-	struct node *current = list->root;
-	struct node *last;
+	struct node *last = before;
 
-	int i=0;
-
-	while(current && i < index) { //Get to the right place
-		i++;
-		last = current;
-		current = current->next;	
-	}
-
-	if(i == 0) {
+	if(before == NULL) { //We are at the front so before is null
 		if(debug) { std::cout << "The added node will be at the front" << std::endl; }
 		if(list->root) {
 			newNode->next = list->root; 
@@ -523,15 +520,14 @@ void LinkedList::insertNode(int index, struct node* newNode) {
 			list->root = newNode;
 			newNode->previous = NULL;
 		} else {
-			//std::cout << "BRUH" << std::endl;
 			list->root = newNode;
 		}
 	} else {
 		if(debug) { std::cout << "The added node will be somewhere inside the list" << std::endl; }
-		if(i < list->length) { //Not at the end. +1 is there to ensure that it is supposed to be put at the end and not the 2nd to last index
+		if(before->next) {
 			if(debug) { std::cout << "Not at the end" << std::endl; }
-			newNode->next = current; //add it
-			current->previous = newNode;
+			newNode->next = last->next; //add it
+			newNode->next->previous = newNode;
 		} else {
 			if(debug) { std::cout << "At the end" << std::endl;}
 			newNode->next = NULL;

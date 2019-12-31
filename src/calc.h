@@ -65,7 +65,7 @@ public:
 	void removeNode(struct node *node);
 
 	//Adds a new node in the index given
-	void insertNode(int index, struct node* newNode);
+	void insertNode(struct node* before, struct node* newNode);
 
 	//Jumps to a specific index in the linked list
 	struct node* jumpTo(int i);
