@@ -770,14 +770,14 @@ struct node* create_node(int type, long double value) {
 
 struct node* parse_add_node(bool atFront, struct node* current, struct node* newNode) {
 
-	if(current) {	
+	if(list->root) {	
 		current->next = newNode;
 		newNode->previous = current;
 	} else {
 		list->root = newNode;
 	}
 	current = newNode;
-	return current; //For some reason setting the pointer wont set the actual thing (I though thats how it worked)
+	return current; //For some reason setting the pointer wont set the actual thing (I thought thats how it worked)
 
 }
 
