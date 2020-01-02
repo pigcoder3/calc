@@ -970,10 +970,10 @@ int parse(char *expression) {
 	}
 
 	if(parenthesisDepth != 0) {
-		std::cout << "Syntax error (Unclosed parenthesis)" << std::endl;
+		std::cout << "Syntax error(Unclosed parenthesis)" << std::endl;
 		error = true;
 	} if(inAbsoluteValue) {
-		std::cout << "Syntax error (Unclosed absolute value)" << std::endl;
+		std::cout << "Syntax error(Unclosed absolute value)" << std::endl;
 		error = true;
 	}
 
