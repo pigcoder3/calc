@@ -129,9 +129,9 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 
 		if(showSteps && !scoutingPhase) { 
 			if(sub_root_last)
-				printStep("", sub_root_last->next, length+2);
+				printStep("", sub_root_last->next, length);
 			else
-				printStep("", list->root, length+2);
+				printStep("", list->root, length);
 		}
 		
 		if(scoutingPhase) { //Reset everything to scout again
