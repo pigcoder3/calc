@@ -36,11 +36,13 @@
 std::string version = "2.1.1";
 
 bool disableSyntaxCheckWarning = false;
-bool equationFound = false;
+int equationArgument = -1; //Stays -1 until found
 
 const char* help = "[HELP]\n"
 				"Usage: calc expression [-s] [-n] [-d] [-c]\n"
 				"       calc [-h] [-v]\n"
+				"\n"
+				"       If no expression is given, calc reads from stdin.\n"
 				"\n"
 				"Options:\n"
 				"  -h - show this help message.\n"
@@ -92,13 +94,7 @@ const char* help = "[HELP]\n"
 
 int main(int argc, char** argv) {
 
-	//If the incorrect number of arguments were given, give the usage
-	if(argc < 2 || argc > 5) { 
-		std::cout << help;
-		return 0;
-	}
-
-	for(int i = 0; i < argc; i++) {
+	for(int i = 1; i < argc; i++) { //Skip the first arg because that is the program name
 	
 		//Send the help message
 		if(strncmp(argv[i], "--help", strlen("--help")) == 0 || strncmp(argv[i], "-h", strlen("-h")) == 0) {
@@ -118,11 +114,12 @@ int main(int argc, char** argv) {
 			std::cout << "version: " << version << std::endl;
 			exit(0);
 		} else { //This is either the equation or its an invalid flag
-			if(equationFound) {
+			if(equationArgument != -1) { //-1 if not found yet
 				std::cout << "Invalid flag: " << argv[i] << std::endl;
 				exit(-1);
+			} else {
+				equationArgument = i;
 			}
-			equationFound = true;
 		}
 	}
 
@@ -133,7 +130,15 @@ int main(int argc, char** argv) {
 		std::cout << "         you have perfect syntax." << std::endl;
 	}
 
-	int length = parse(argv[1]);
+	int length = 0;
+	if(equationArgument != -1) { //Equation in arguments
+		std::string expression = argv[1];
+		length = parse(expression);
+	} else { //Equation not in arguments, so get from stdin. Can be piped this way
+		std::string buffer;
+		getline(std::cin, buffer);
+		length = parse(buffer);
+	}
 
 	//Begin recursive calculations
 

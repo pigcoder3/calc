@@ -792,7 +792,7 @@ struct node* parse_add_node(bool atFront, struct node* current, struct node* new
 }
 
 //Parse the entire expression into a linked list
-int parse(char *expression) {
+int parse(std::string expression) {
 	
 	//Remove all spaces
 	std::string str = expression;
