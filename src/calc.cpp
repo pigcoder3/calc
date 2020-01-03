@@ -129,9 +129,9 @@ void calculate(struct node *sub_root_last, int startIndex, int length, bool abso
 
 		if(showSteps && !scoutingPhase) { 
 			if(sub_root_last)
-				printStep("", sub_root_last->next, length+2);
+				printStep("", sub_root_last->next, length);
 			else
-				printStep("", list->root, length+2);
+				printStep("", list->root, length);
 		}
 		
 		if(scoutingPhase) { //Reset everything to scout again
@@ -792,7 +792,7 @@ struct node* parse_add_node(bool atFront, struct node* current, struct node* new
 }
 
 //Parse the entire expression into a linked list
-int parse(char *expression) {
+int parse(std::string expression) {
 	
 	//Remove all spaces
 	std::string str = expression;

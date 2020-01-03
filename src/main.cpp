@@ -33,14 +33,16 @@
 //Project Headers
 #include "calc.h"
 
-std::string version = "2.1.1";
+std::string version = "2.2";
 
 bool disableSyntaxCheckWarning = false;
+int equationArgument = -1; //Stays -1 until found
 
 const char* help = "[HELP]\n"
 				"Usage: calc expression [-s] [-n] [-d] [-c]\n"
 				"       calc [-h] [-v]\n"
-				"The expression ALWAYS comes first"
+				"\n"
+				"       If no expression is given, calc reads from stdin.\n"
 				"\n"
 				"Options:\n"
 				"  -h - show this help message.\n"
@@ -83,17 +85,16 @@ const char* help = "[HELP]\n"
 				"  (-4^2)+2/3       = 16.6666666\n"
 				"  |-5-2|           = 7\n"
 				"  2/(3V8)          = 1\n"
-				"  sin(1)/sin(1)    = 1\n";
+				"  sin(1)/sin(1)    = 1\n"
+				"\n"
+				"Exit status:\n"
+				"  -2:   Syntax error\n"
+				"  -1:   Invalid flag\n"
+				"  0:    Everthing is okay\n";
 
 int main(int argc, char** argv) {
 
-	//If the incorrect number of arguments were given, give the usage
-	if(argc < 2 || argc > 5) { 
-		std::cout << help;
-		return 0;
-	}
-
-	for(int i = 0; i < argc; i++) {
+	for(int i = 1; i < argc; i++) { //Skip the first arg because that is the program name
 	
 		//Send the help message
 		if(strncmp(argv[i], "--help", strlen("--help")) == 0 || strncmp(argv[i], "-h", strlen("-h")) == 0) {
@@ -111,18 +112,33 @@ int main(int argc, char** argv) {
 			disableSyntaxCheckWarning = true;
 		} else if ((strncmp(argv[i], "-v", strlen(argv[i])) == 0) || (strncmp(argv[i], "--version", strlen(argv[i])) == 0)) {
 			std::cout << "version: " << version << std::endl;
-			return 0;
+			exit(0);
+		} else { //This is either the equation or its an invalid flag
+			if(equationArgument != -1) { //-1 if not found yet
+				std::cout << "Invalid flag: " << argv[i] << std::endl;
+				exit(-1);
+			} else {
+				equationArgument = i;
+			}
 		}
 	}
 
-	if(!disableSyntaxCheckWarning) { //Give a warning if the user did not disable it using the -w flag
+	if(disableSyntaxCheck && !disableSyntaxCheckWarning) { //Give a warning if the user did not disable it using the -w flag
 		std::cout << "WARNING: You have disabled syntax checking, which is strongly ill-advised." << std::endl;
 		std::cout << "         Disabling syntax checking could cause strange errors or output" << std::endl;
 		std::cout << "         an incorrect result. Only use this if you are absolutely sure that" << std::endl;
 		std::cout << "         you have perfect syntax." << std::endl;
 	}
 
-	int length = parse(argv[1]);
+	int length = 0;
+	if(equationArgument != -1) { //Equation in arguments
+		std::string expression = argv[1];
+		length = parse(expression);
+	} else { //Equation not in arguments, so get from stdin. Can be piped this way
+		std::string buffer;
+		getline(std::cin, buffer);
+		length = parse(buffer);
+	}
 
 	//Begin recursive calculations
 
