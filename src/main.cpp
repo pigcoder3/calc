@@ -36,11 +36,11 @@
 std::string version = "2.1.1";
 
 bool disableSyntaxCheckWarning = false;
+bool equationFound = false;
 
 const char* help = "[HELP]\n"
 				"Usage: calc expression [-s] [-n] [-d] [-c]\n"
 				"       calc [-h] [-v]\n"
-				"The expression ALWAYS comes first"
 				"\n"
 				"Options:\n"
 				"  -h - show this help message.\n"
@@ -83,7 +83,12 @@ const char* help = "[HELP]\n"
 				"  (-4^2)+2/3       = 16.6666666\n"
 				"  |-5-2|           = 7\n"
 				"  2/(3V8)          = 1\n"
-				"  sin(1)/sin(1)    = 1\n";
+				"  sin(1)/sin(1)    = 1\n"
+				"\n"
+				"Exit status:\n"
+				"  -2:   Syntax error\n"
+				"  -1:   Invalid flag\n"
+				"  0:    Everthing is okay\n";
 
 int main(int argc, char** argv) {
 
@@ -111,11 +116,17 @@ int main(int argc, char** argv) {
 			disableSyntaxCheckWarning = true;
 		} else if ((strncmp(argv[i], "-v", strlen(argv[i])) == 0) || (strncmp(argv[i], "--version", strlen(argv[i])) == 0)) {
 			std::cout << "version: " << version << std::endl;
-			return 0;
+			exit(0);
+		} else { //This is either the equation or its an invalid flag
+			if(equationFound) {
+				std::cout << "Invalid flag: " << argv[i] << std::endl;
+				exit(-1);
+			}
+			equationFound = true;
 		}
 	}
 
-	if(!disableSyntaxCheckWarning) { //Give a warning if the user did not disable it using the -w flag
+	if(disableSyntaxCheck && !disableSyntaxCheckWarning) { //Give a warning if the user did not disable it using the -w flag
 		std::cout << "WARNING: You have disabled syntax checking, which is strongly ill-advised." << std::endl;
 		std::cout << "         Disabling syntax checking could cause strange errors or output" << std::endl;
 		std::cout << "         an incorrect result. Only use this if you are absolutely sure that" << std::endl;
