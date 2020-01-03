@@ -122,6 +122,6 @@ std::string error_call(struct node *current);
 //Function used by parse() extensively to add a node to the currently-being-parsed equation
 struct node* parse_add_node(bool atFront, struct node *current, struct node *new_node);
 
-int parse(char *equation);
+int parse(std::string equation);
 
 #endif
