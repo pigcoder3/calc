@@ -36,17 +36,16 @@
 std::string version = "2.2";
 
 bool disableSyntaxCheckWarning = false;
-bool enableConsole = false;
+bool enableConsole = true;
 int equationArgument = -1; //Stays -1 until found
 
 const char* help = "[HELP]\n"
-				"Usage: calc expression [-i] [-s] [-n] [-d] [-c]\n"
+				"Usage: calc expression [-p] [-s] [-n] [-d] [-c]\n"
 				"       calc [-h] [-v]\n"
 				"\n"
-				"       If no expression is given, and the -i flag is not used, calc reads from stdin\n"
-				"       (for piping the expression).\n"
+				"       If no expression is given, and the -p flag is not used, calc opens a console\n"
 				"\n"
-				"       -i opens a console, and is intended to be used for casual calculator use.\n"
+				"       -p allows you to pipe an expression to calc."
 				"\n"
 				"Options:\n"
 				"  -c - Disable Syntax checks. WARNING: Disabling syntax checking could cause strange\n"
@@ -55,8 +54,7 @@ const char* help = "[HELP]\n"
 				"       if there is a bug in the syntax checker. Disable this warning with -w.\n"
 				"  -d - Show debug messages.\n"
 				"  -h - show this help message.\n"
-				"  -i - open a calc console. Note that if an expression is provided as an arguments\n"
-				"       while the option is used, the expression will not be calculated.\n"
+				"  -p - Make calc listen for an expression through stdin (Allows for piping).\n"
 				"  -s - show steps to solve.\n"
 				"  -n - show result in scientific notation.\n"
 				"  -v --version - show version.\n"
@@ -113,7 +111,7 @@ int main(int argc, char** argv) {
 	for(int i = 1; i < argc; i++) { //Skip the first arg because that is the program name
 	
 		//Send the help message
-		if(strncmp(argv[i], "--help", strlen("--help")) == 0 || strncmp(argv[i], "-h", strlen("-h")) == 0) {
+		if(strncmp(argv[i], "help", strlen("help")) == 0 || strncmp(argv[i], "-h", strlen("-h")) == 0) {
 			std::cout << help;
 			exit(0);
 		} else if (strncmp(argv[i], "-s", strlen(argv[i])) == 0) {
@@ -126,8 +124,8 @@ int main(int argc, char** argv) {
 			disableSyntaxCheck = true;
 		} else if (strncmp(argv[i], "-w", strlen(argv[i])) == 0) {
 			disableSyntaxCheckWarning = true;
-		} else if (strncmp(argv[i], "-i", strlen(argv[i])) == 0) {
-			enableConsole = true;
+		} else if (strncmp(argv[i], "-p", strlen(argv[i])) == 0) {
+			enableConsole = false;
 		} else if ((strncmp(argv[i], "-v", strlen(argv[i])) == 0) || (strncmp(argv[i], "--version", strlen(argv[i])) == 0)) {
 			std::cout << "version: " << version << std::endl;
 			exit(0);
@@ -138,6 +136,7 @@ int main(int argc, char** argv) {
 				std::cout << "Invalid flag: " << argv[i] << std::endl;
 				exit(-1);
 			} else {
+				enableConsole = false;
 				equationArgument = i;
 			}
 		}
@@ -153,7 +152,7 @@ int main(int argc, char** argv) {
 	if(!enableConsole) {
 		int length = 0;
 		if(equationArgument != -1) { //Equation in arguments
-			std::string expression = argv[1];
+			std::string expression = argv[equationArgument];
 			length = parse(expression);
 		} else { //Equation not in arguments, so get from stdin. Can be piped this way
 			std::string buffer;
@@ -168,6 +167,8 @@ int main(int argc, char** argv) {
 		if(sciNotation) { //Print the result in scientific notation
 			std::cout << std::scientific;
 		}
+
+		std::cout << list->root->value << std::endl;
 	} else {
 		int length = 0;
 		while(true) {
