@@ -641,15 +641,19 @@ void printStep(std::string operation, struct node* begin, int length) {
 	int i = 0;
 	while(current != NULL && i < length) {
 		if(current->type == 0) {
-			output+=removeZeros(std::to_string(current->value));
+			if(current->value < 0.0001) { //Too small to display, so lets do it in scienfic notation
+				std::cout << std::scientific << current->value << std::defaultfloat;
+			} else {
+				std::cout << removeZeros(std::to_string(current->value));
+			}
 		} else {
-			output+=getSymbol(current->value);
+			std::cout << getSymbol(current->value);
 		}
 		current = current->next;
 		i++;
 	}
+	std::cout << std::endl;
 
-	std::cout << output << std::endl;
 }
 
 //Used to get numbers from the equation
@@ -977,7 +981,7 @@ int parse(std::string expression) {
 		error = true;
 	}
 
-	if(error) { exit(-2); } //Exit if there was one
+	if(error) { return 0; } //Exit if there was one
 
 	return list->length;
 
