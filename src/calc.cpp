@@ -977,7 +977,7 @@ int parse(std::string expression) {
 		error = true;
 	}
 
-	if(error) { exit(-2); } //Exit if there was one
+	if(error) { return 0; } //Exit if there was one
 
 	return list->length;
 
