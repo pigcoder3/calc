@@ -486,7 +486,7 @@ void LinkedList::removeNode(struct node *node) {
 			node = NULL;
 			list->root->previous = NULL;
 		} else { //This is the only thing in the list
-			std::cout << "The removed node is the only one in the list" << std::endl;
+			if(debug) { std::cout << "The removed node is the only one in the list" << std::endl; }
 			delete list->root;
 			list->root = NULL; //Create a new root so that this can still be used
 
@@ -496,13 +496,13 @@ void LinkedList::removeNode(struct node *node) {
 		if(!node->next) { //It is at the end
 			if(debug) { std::cout << "The removed node is at the end" << std::endl; }
 			node->previous->next = NULL;
-			delete &node;
+			delete node;
 			node = NULL;
 		} else {
 			if(debug) { std::cout << "The removed node is somewhere inside the list" << std::endl; }
 			node->next->previous = node->previous;
 			node->previous->next = node->next;
-  			delete &node;
+  			delete node;
 			node = NULL;
 		}
 	}

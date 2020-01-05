@@ -20,20 +20,34 @@ If anything is messed up in the process: `make clean`, and redo steps.
 Using the -h flag:
 
 ```
-Usage: calc expression [-s] [-n] [-d] [-c]
+[HELP]
+Usage: calc expression [-p] [-s] [-n] [-d] [-c]
        calc [-h] [-v]
 
+       If no expression is given, and the -p flag is not used, calc opens a console
+
+       -p allows you to pipe an expression to calc.
 Options:
-  -h - show this help message.
-  -s - show steps to solve.
-  -n - show result in scientific notation.
-  -d - Show debug messages.
   -c - Disable Syntax checks. WARNING: Disabling syntax checking could cause strange
        errors during calculation or even give an incorrect result, because syntax
        checking stops the program if something is wrong. This should only be used
        if there is a bug in the syntax checker. Disable this warning with -w.
-  -w - Disable the warning that comes with disabling syntax checks (-c).
+  -d - Show debug messages.
+  -h - show this help message.
+  -p - Make calc listen for an expression through stdin (Allows for piping).
+  -s - show steps to solve.
+  -n - show result in scientific notation.
   -v --version - show version.
+  -w - Disable the warning that comes with disabling syntax checks (-c).
+
+Console Commands:
+  help - show this help messages.
+  debug - toggle debug messages.
+  steps - toggle the steps for solving.
+  snotation - toggle scientific notation.
+  version - display the version.
+  syntaxcheck - toggle syntax checking.
+  exit - exit calc.
 
 Notes:
   [1] Quotation marks should be present to make sure that your shell interprets the
@@ -70,6 +84,7 @@ Exit status:
   -2:   Syntax error
   -1:   Invalid flag
   0:    Everthing is okay
+
 ```
 
 ### Examples
@@ -80,16 +95,18 @@ $ calc "4+4"
 8
 ```
 
-If no expression is supplied through the arguments, calc will take an expression through stdin:
+If no expression is supplied through the arguments, calc will open console mode:
 ```
-$ calc
-4+4
+$ calc -p
+ > 4+4
 8
+ > (4+5)/3
+3
 ```
 
 You can also pipe the expression to calc:
 ```
-$ cat largeExpression.txt | calc
+$ cat largeExpression.txt | calc -p
 6200
 ```
 
