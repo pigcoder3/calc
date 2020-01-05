@@ -33,7 +33,7 @@
 //Project Headers
 #include "calc.h"
 
-std::string version = "2.3";
+std::string version = "2.3.1";
 
 bool disableSyntaxCheckWarning = false;
 bool enableConsole = true;
@@ -173,7 +173,7 @@ int main(int argc, char** argv) {
 		int length = 0;
 		while(true) {
 			//Get commands
-			list->clean();
+			if(list) { list->clean(); }
 			std::string input;
 			std::cout << " > ";
 			getline(std::cin, input);
