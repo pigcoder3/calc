@@ -173,7 +173,7 @@ int main(int argc, char** argv) {
 		int length = 0;
 		while(true) {
 			//Get commands
-			list->clean();
+			if(list) { list->clean(); }
 			std::string input;
 			std::cout << " > ";
 			getline(std::cin, input);

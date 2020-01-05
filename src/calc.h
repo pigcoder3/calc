@@ -55,7 +55,7 @@ public:
 	struct node *root;
 
 	LinkedList() { length = 0; root = NULL; }
-	~LinkedList() { clean(); }
+	~LinkedList() { }
 
 	//Replaces a list of nodes within an array with another list of nodes
 	//TODO: optimize this thing cuz its mega slow
@@ -120,8 +120,10 @@ struct node* create_node(int type, long double value);
 std::string error_call(struct node *current);
 
 //Function used by parse() extensively to add a node to the currently-being-parsed equation
-struct node* parse_add_node(bool atFront, struct node *current, struct node *new_node);
+void parse_add_node(bool atFront, struct node** current, struct node* newNode);
 
 int parse(std::string equation);
+
+void call_clean();
 
 #endif

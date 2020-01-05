@@ -41,7 +41,7 @@ bool debug = false;
 bool disableSyntaxCheck = false;
 int depth = 0;
 
-LinkedList *list = new LinkedList();
+LinkedList *list;
 
 //types:
 // 0: regular number
@@ -484,9 +484,9 @@ void LinkedList::removeNode(struct node *node) {
 			node->next = NULL;
   			delete node;
 			node = NULL;
-
 			list->root->previous = NULL;
 		} else { //This is the only thing in the list
+			std::cout << "The removed node is the only one in the list" << std::endl;
 			delete list->root;
 			list->root = NULL; //Create a new root so that this can still be used
 
@@ -496,13 +496,13 @@ void LinkedList::removeNode(struct node *node) {
 		if(!node->next) { //It is at the end
 			if(debug) { std::cout << "The removed node is at the end" << std::endl; }
 			node->previous->next = NULL;
-			delete node;
+			delete &node;
 			node = NULL;
 		} else {
 			if(debug) { std::cout << "The removed node is somewhere inside the list" << std::endl; }
 			node->next->previous = node->previous;
 			node->previous->next = node->next;
-  			delete node;
+  			delete &node;
 			node = NULL;
 		}
 	}
@@ -608,6 +608,14 @@ struct node* LinkedList::jumpTo(int i) {
 //Free the entire list
 void LinkedList::clean() {
 
+	if(debug) { std::cout << "Cleaning the linked list" << std::endl; }
+	
+	if(list->length == 0) { 
+		std::cout << "The list was empty" << std::endl;
+		delete list;
+		list = NULL;
+		return;
+	}
 
 	struct node *current = list->root;
 	struct node *temp;
@@ -623,6 +631,9 @@ void LinkedList::clean() {
 	list->root = NULL;
 
 	list->length = 0;
+
+	delete list;
+	list = NULL;
 
 }
 
@@ -782,28 +793,29 @@ struct node* create_node(int type, long double value) {
 
 }
 
-struct node* parse_add_node(bool atFront, struct node* current, struct node* newNode) {
+void parse_add_node(bool atFront, struct node** current, struct node* newNode) {
 
 	if(list->root) {	
-		current->next = newNode;
-		newNode->previous = current;
+		(*current)->next = newNode;
+		newNode->previous = *current;
 	} else {
 		list->root = newNode;
 	}
-	current = newNode;
-	return current; //For some reason setting the pointer wont set the actual thing (I thought thats how it worked)
+	*current = newNode;
+	//return current; //For some reason setting the pointer wont set the actual thing (I thought thats how it worked)
 
 }
 
 //Parse the entire expression into a linked list
 int parse(std::string expression) {
-	
+
 	//Remove all spaces
 	std::string str = expression;
 	str.erase(remove_if(str.begin(), str.end(), ::isspace), str.end());
 
 	depth = 0;
-	list->clean(); //Reset the thing (Just for convenience for tests)
+	if(list) { list->clean(); }
+	list = new LinkedList();
 	struct node *current = list->root;
 
 	bool error = false;
@@ -811,59 +823,61 @@ int parse(std::string expression) {
 
 	//Turn the equation into a linked list
 	for(int i=0; i<str.length(); i++) {
+	
 		bool atFront = false;
 		if(i==0) 
 			atFront = true;
 		char c = str[i];
 		//Trig functions
 		if((i < str.length()-3) && str[i] == 's' && str[i+1] == 'i' && str[i+2] == 'n') {
-			current = parse_add_node(atFront, current, create_node(1,9));
+			parse_add_node(atFront, &current, create_node(1,9));
 			i+=2; //Compensate for the extra characters
 		} else if((i < str.length()-3) && str[i] == 'c' && str[i+1] == 'o' && str[i+2] == 's') {
-			current = parse_add_node(atFront, current, create_node(1,10));
+			parse_add_node(atFront, &current, create_node(1,10));
 			i+=2; //Compensate for the extra characters
 		} else if((i < str.length()-3) && str[i] == 't' && str[i+1] == 'a' && str[i+2] == 'n') {
-			current = parse_add_node(atFront, current, create_node(1,11));
+			parse_add_node(atFront, &current, create_node(1,11));
 			i+=2; //Compensate for the extra characters
 		}
 
 		//Enclosing symbols
 		else if(c == '(') {
-			current = parse_add_node(atFront, current, create_node(1,6));
+			parse_add_node(atFront, &current, create_node(1,6));
 		} else if(c == ')') {
-			current = parse_add_node(atFront, current, create_node(1,7));
+			parse_add_node(atFront, &current, create_node(1,7));
 		} else if(c == '|') {
-			current = parse_add_node(atFront, current, create_node(1,8));
+			parse_add_node(atFront, &current, create_node(1,8));
 			inAbsoluteValue = !inAbsoluteValue;
 		}
 
 		//Basic symbols
 		else if(c == 'V') {
-			current = parse_add_node(atFront, current, create_node(1,4));
+			parse_add_node(atFront, &current, create_node(1,4));
 		} else if(c == '^') {
-			current = parse_add_node(atFront, current, create_node(1,5));
+			parse_add_node(atFront, &current, create_node(1,5));
 		} else if(c == '/') {
-			current = parse_add_node(atFront, current, create_node(1,3));
+			parse_add_node(atFront, &current, create_node(1,3));
 		} else if(c == '*') {
-			current = parse_add_node(atFront, current, create_node(1,2));
+			parse_add_node(atFront, &current, create_node(1,2));
 		} else if(c == '+') {
-			current = parse_add_node(atFront, current, create_node(1,0));
+			parse_add_node(atFront, &current, create_node(1,0));
 		} else if(c == '-') {
 			if (
 			(i>0 && (isdigit(str[i-1]) || str[i-1] == ')' || (str[i-1] == '|' && !inAbsoluteValue)))
 			|| (!isdigit(str[i+1]) && !(str[i+1] == '.' && isdigit(str[i+2])) && !(str[i+1] == '-' && str[i+2] == '.' && isdigit(str[i+3])))
 			|| (str[i+1] == '(' || str[i+1] == '|')
 			) { //No number so this is is a minus
-				current = parse_add_node(atFront, current, create_node(1,1));
+				parse_add_node(atFront, &current, create_node(1,1));
 			} else { //This is a number
-				current = parse_add_node(atFront, current, create_node(0, getNumberAsNumber(str, i)));
+				parse_add_node(atFront, &current, create_node(0, getNumberAsNumber(str, i)));
 				i+=lastNumberGottenLength-1;
 			}
 		} else if(isdigit(str[i]) || str[i] == '.') { //This is a number
-			current = parse_add_node(atFront, current, create_node(0, getNumberAsNumber(str, i)));
+			parse_add_node(atFront, &current, create_node(0, getNumberAsNumber(str, i)));
 			i+=lastNumberGottenLength-1;
 		} else { //Unknown symbol (We'll just leave it at -1 so that we can deal with it during syntax error checking
-			current = parse_add_node(atFront, current, create_node(-1, 0));
+			parse_add_node(atFront, &current, create_node(-1, 0));
+			list->length--;
 		}
 
 		list->length++;
