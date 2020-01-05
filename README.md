@@ -17,7 +17,7 @@ If anything is messed up in the process: `make clean`, and redo steps.
 
 ### Help Message
 
-Using the -h flag:
+Using the `-h` flag:
 
 ```
 [HELP]
