@@ -33,7 +33,7 @@
 //Project Headers
 #include "calc.h"
 
-std::string version = "2.3";
+std::string version = "2.3.1";
 
 bool disableSyntaxCheckWarning = false;
 bool enableConsole = true;
